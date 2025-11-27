@@ -12,7 +12,7 @@ services:
     restart: always
 
   backend:
-    image: ghcr.io/${GITHUB_REPOSITORY_OWNER}/fleet-backend:latest
+    image: ghcr.io/${GITHUB_REPOSITORY}/fleet-backend:latest
     command: gunicorn fleet_management.wsgi:application --bind 0.0.0.0:8000
     volumes:
       - static_volume:/app/static
@@ -27,7 +27,7 @@ services:
     restart: always
 
   frontend:
-    image: ghcr.io/${GITHUB_REPOSITORY_OWNER}/fleet-frontend:latest
+    image: ghcr.io/${GITHUB_REPOSITORY}/fleet-frontend:latest
     expose:
       - 80
     restart: always

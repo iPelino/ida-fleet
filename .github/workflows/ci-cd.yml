@@ -80,7 +80,7 @@ jobs:
           script: |
             cd app
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-            export GITHUB_REPOSITORY_OWNER=$(echo ${{ github.repository_owner }} | tr '[:upper:]' '[:lower:]')
+            export GITHUB_REPOSITORY=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')
             export DOMAIN_NAME=${{ secrets.DOMAIN_NAME }}
             
             # Create .env file
