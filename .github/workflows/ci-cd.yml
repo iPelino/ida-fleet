@@ -19,6 +19,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      - name: Lowercase Image Name
+        run: |
+          echo "IMAGE_NAME=${GITHUB_REPOSITORY,,}" >> ${GITHUB_ENV}
+        env:
+          GITHUB_REPOSITORY: '${{ github.repository }}'
+
       - name: Log in to the Container registry
         uses: docker/login-action@v2
         with:
@@ -74,7 +80,7 @@ jobs:
           script: |
             cd /app
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-            export GITHUB_REPOSITORY_OWNER=${{ github.repository_owner }}
+            export GITHUB_REPOSITORY_OWNER=$(echo ${{ github.repository_owner }} | tr '[:upper:]' '[:lower:]')
             export DOMAIN_NAME=${{ secrets.DOMAIN_NAME }}
             # Export other env vars if needed, or create a .env file on the server
             docker-compose -f docker-compose.prod.yml pull
