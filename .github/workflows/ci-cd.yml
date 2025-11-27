@@ -82,6 +82,18 @@ jobs:
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             export GITHUB_REPOSITORY_OWNER=$(echo ${{ github.repository_owner }} | tr '[:upper:]' '[:lower:]')
             export DOMAIN_NAME=${{ secrets.DOMAIN_NAME }}
-            # Export other env vars if needed, or create a .env file on the server
+            
+            # Create .env file
+            cat <<EOF > .env
+            POSTGRES_DB=${{ secrets.POSTGRES_DB }}
+            POSTGRES_USER=${{ secrets.POSTGRES_USER }}
+            POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+            DOMAIN_NAME=${{ secrets.DOMAIN_NAME }}
+            DEBUG=False
+            ALLOWED_HOSTS=${{ secrets.DOMAIN_NAME }},localhost,127.0.0.1
+            DATABASE_URL=postgres://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@db:5432/${{ secrets.POSTGRES_DB }}
+            SECRET_KEY=${{ secrets.SECRET_KEY }}
+            EOF
+            
             docker compose -f docker-compose.prod.yml pull
             docker compose -f docker-compose.prod.yml up -d --remove-orphans
