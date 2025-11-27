@@ -83,5 +83,5 @@ jobs:
             export GITHUB_REPOSITORY_OWNER=$(echo ${{ github.repository_owner }} | tr '[:upper:]' '[:lower:]')
             export DOMAIN_NAME=${{ secrets.DOMAIN_NAME }}
             # Export other env vars if needed, or create a .env file on the server
-            docker-compose -f docker-compose.prod.yml pull
-            docker-compose -f docker-compose.prod.yml up -d --remove-orphans
+            docker compose -f docker-compose.prod.yml pull
+            docker compose -f docker-compose.prod.yml up -d --remove-orphans
