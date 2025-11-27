@@ -1,0 +1,185 @@
+Watching for file changes with StatReloader
+[25/Nov/2025 09:46:03] "POST /api/signup HTTP/1.1" 201 149
+[25/Nov/2025 09:46:03] "POST /api/vehicles/ HTTP/1.1" 201 228
+[25/Nov/2025 09:46:03] "POST /api/customers/ HTTP/1.1" 201 135
+[25/Nov/2025 09:46:03] "POST /api/trips/ HTTP/1.1" 201 411
+[25/Nov/2025 09:46:03] "POST /api/trips/1/payments/ HTTP/1.1" 201 123
+[25/Nov/2025 09:46:03] "POST /api/expenses/ HTTP/1.1" 201 312
+/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/fleet_management/settings.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+November 25, 2025 - 09:45:51
+Django version 5.2.8, using settings 'fleet_management.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+WARNING: This is a development server. Do not use it in a production setting. Use a production WSGI or ASGI server instead.
+For more information on production servers see: https://docs.djangoproject.com/en/5.2/howto/deployment/
+Watching for file changes with StatReloader
+/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/fleet_management/settings.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+November 25, 2025 - 11:00:41
+Django version 5.2.8, using settings 'fleet_management.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+WARNING: This is a development server. Do not use it in a production setting. Use a production WSGI or ASGI server instead.
+For more information on production servers see: https://docs.djangoproject.com/en/5.2/howto/deployment/
+Watching for file changes with StatReloader
+/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/fleet_management/urls.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+November 25, 2025 - 12:14:30
+Django version 5.2.8, using settings 'fleet_management.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+WARNING: This is a development server. Do not use it in a production setting. Use a production WSGI or ASGI server instead.
+For more information on production servers see: https://docs.djangoproject.com/en/5.2/howto/deployment/
+Watching for file changes with StatReloader
+/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/apps/accounts/views.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+November 25, 2025 - 12:14:31
+Django version 5.2.8, using settings 'fleet_management.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+WARNING: This is a development server. Do not use it in a production setting. Use a production WSGI or ASGI server instead.
+For more information on production servers see: https://docs.djangoproject.com/en/5.2/howto/deployment/
+Watching for file changes with StatReloader
+Traceback (most recent call last):
+  File "/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/venv/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+  File "/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/venv/lib/python3.12/site-packages/django/utils/deprecation.py", line 119, in __call__
+  File "/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/venv/lib/python3.12/site-packages/django/contrib/sessions/middleware.py", line 20, in process_request
+  File "/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/venv/lib/python3.12/site-packages/django/contrib/sessions/backends/db.py", line 18, in __init__
+  File "/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/venv/lib/python3.12/site-packages/django/contrib/sessions/backends/base.py", line 49, in __init__
+  File "/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/venv/lib/python3.12/site-packages/django/utils/module_loading.py", line 30, in import_string
+  File "/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/venv/lib/python3.12/site-packages/django/utils/module_loading.py", line 15, in cached_import
+  File "/opt/homebrew/Cellar/python@3.12/3.12.12/Frameworks/Python.framework/Versions/3.12/lib/python3.12/importlib/__init__.py", line 90, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1324, in _find_and_load_unlocked
+ModuleNotFoundError: No module named 'django.contrib.sessions.serializers'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/venv/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+  File "/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/venv/lib/python3.12/site-packages/django/utils/deprecation.py", line 120, in __call__
+  File "/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/venv/lib/python3.12/site-packages/django/core/handlers/exception.py", line 57, in inner
+  File "/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/venv/lib/python3.12/site-packages/django/core/handlers/exception.py", line 141, in response_for_exception
+  File "/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/venv/lib/python3.12/site-packages/django/core/handlers/exception.py", line 182, in handle_uncaught_exception
+  File "/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/venv/lib/python3.12/site-packages/django/views/debug.py", line 69, in technical_500_response
+  File "/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/venv/lib/python3.12/site-packages/django/views/debug.py", line 426, in get_traceback_html
+  File "/opt/homebrew/Cellar/python@3.12/3.12.12/Frameworks/Python.framework/Versions/3.12/lib/python3.12/pathlib.py", line 1013, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/venv/lib/python3.12/site-packages/django/views/templates/technical_500.html'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/venv/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+  File "/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/venv/lib/python3.12/site-packages/corsheaders/middleware.py", line 53, in __call__
+  File "/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/venv/lib/python3.12/site-packages/django/core/handlers/exception.py", line 57, in inner
+  File "/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/venv/lib/python3.12/site-packages/django/core/handlers/exception.py", line 141, in response_for_exception
+  File "/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/venv/lib/python3.12/site-packages/django/core/handlers/exception.py", line 182, in handle_uncaught_exception
+  File "/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/venv/lib/python3.12/site-packages/django/views/debug.py", line 69, in technical_500_response
+  File "/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/venv/lib/python3.12/site-packages/django/views/debug.py", line 426, in get_traceback_html
+  File "/opt/homebrew/Cellar/python@3.12/3.12.12/Frameworks/Python.framework/Versions/3.12/lib/python3.12/pathlib.py", line 1013, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/venv/lib/python3.12/site-packages/django/views/templates/technical_500.html'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/opt/homebrew/Cellar/python@3.12/3.12.12/Frameworks/Python.framework/Versions/3.12/lib/python3.12/wsgiref/handlers.py", line 137, in run
+    self.result = application(self.environ, self.start_response)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/venv/lib/python3.12/site-packages/django/contrib/staticfiles/handlers.py", line 80, in __call__
+  File "/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/venv/lib/python3.12/site-packages/django/core/handlers/wsgi.py", line 124, in __call__
+  File "/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/venv/lib/python3.12/site-packages/django/core/handlers/base.py", line 140, in get_response
+  File "/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/venv/lib/python3.12/site-packages/django/core/handlers/exception.py", line 57, in inner
+  File "/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/venv/lib/python3.12/site-packages/django/core/handlers/exception.py", line 141, in response_for_exception
+  File "/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/venv/lib/python3.12/site-packages/django/core/handlers/exception.py", line 182, in handle_uncaught_exception
+  File "/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/venv/lib/python3.12/site-packages/django/views/debug.py", line 69, in technical_500_response
+  File "/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/venv/lib/python3.12/site-packages/django/views/debug.py", line 426, in get_traceback_html
+  File "/opt/homebrew/Cellar/python@3.12/3.12.12/Frameworks/Python.framework/Versions/3.12/lib/python3.12/pathlib.py", line 1013, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/venv/lib/python3.12/site-packages/django/views/templates/technical_500.html'
+[26/Nov/2025 22:29:57] "GET /api/user HTTP/1.1" 500 59
+Traceback (most recent call last):
+  File "/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/venv/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+  File "/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/venv/lib/python3.12/site-packages/django/utils/deprecation.py", line 119, in __call__
+  File "/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/venv/lib/python3.12/site-packages/django/contrib/sessions/middleware.py", line 20, in process_request
+  File "/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/venv/lib/python3.12/site-packages/django/contrib/sessions/backends/db.py", line 18, in __init__
+  File "/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/venv/lib/python3.12/site-packages/django/contrib/sessions/backends/base.py", line 49, in __init__
+  File "/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/venv/lib/python3.12/site-packages/django/utils/module_loading.py", line 30, in import_string
+  File "/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/venv/lib/python3.12/site-packages/django/utils/module_loading.py", line 15, in cached_import
+  File "/opt/homebrew/Cellar/python@3.12/3.12.12/Frameworks/Python.framework/Versions/3.12/lib/python3.12/importlib/__init__.py", line 90, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1324, in _find_and_load_unlocked
+ModuleNotFoundError: No module named 'django.contrib.sessions.serializers'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/venv/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+  File "/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/venv/lib/python3.12/site-packages/django/utils/deprecation.py", line 120, in __call__
+  File "/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/venv/lib/python3.12/site-packages/django/core/handlers/exception.py", line 57, in inner
+  File "/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/venv/lib/python3.12/site-packages/django/core/handlers/exception.py", line 141, in response_for_exception
+  File "/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/venv/lib/python3.12/site-packages/django/core/handlers/exception.py", line 182, in handle_uncaught_exception
+  File "/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/venv/lib/python3.12/site-packages/django/views/debug.py", line 69, in technical_500_response
+  File "/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/venv/lib/python3.12/site-packages/django/views/debug.py", line 426, in get_traceback_html
+  File "/opt/homebrew/Cellar/python@3.12/3.12.12/Frameworks/Python.framework/Versions/3.12/lib/python3.12/pathlib.py", line 1013, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/venv/lib/python3.12/site-packages/django/views/templates/technical_500.html'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/venv/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+  File "/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/venv/lib/python3.12/site-packages/corsheaders/middleware.py", line 53, in __call__
+  File "/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/venv/lib/python3.12/site-packages/django/core/handlers/exception.py", line 57, in inner
+  File "/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/venv/lib/python3.12/site-packages/django/core/handlers/exception.py", line 141, in response_for_exception
+  File "/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/venv/lib/python3.12/site-packages/django/core/handlers/exception.py", line 182, in handle_uncaught_exception
+  File "/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/venv/lib/python3.12/site-packages/django/views/debug.py", line 69, in technical_500_response
+  File "/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/venv/lib/python3.12/site-packages/django/views/debug.py", line 426, in get_traceback_html
+  File "/opt/homebrew/Cellar/python@3.12/3.12.12/Frameworks/Python.framework/Versions/3.12/lib/python3.12/pathlib.py", line 1013, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/venv/lib/python3.12/site-packages/django/views/templates/technical_500.html'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/opt/homebrew/Cellar/python@3.12/3.12.12/Frameworks/Python.framework/Versions/3.12/lib/python3.12/wsgiref/handlers.py", line 137, in run
+    self.result = application(self.environ, self.start_response)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/venv/lib/python3.12/site-packages/django/contrib/staticfiles/handlers.py", line 80, in __call__
+  File "/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/venv/lib/python3.12/site-packages/django/core/handlers/wsgi.py", line 124, in __call__
+  File "/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/venv/lib/python3.12/site-packages/django/core/handlers/base.py", line 140, in get_response
+  File "/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/venv/lib/python3.12/site-packages/django/core/handlers/exception.py", line 57, in inner
+  File "/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/venv/lib/python3.12/site-packages/django/core/handlers/exception.py", line 141, in response_for_exception
+  File "/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/venv/lib/python3.12/site-packages/django/core/handlers/exception.py", line 182, in handle_uncaught_exception
+  File "/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/venv/lib/python3.12/site-packages/django/views/debug.py", line 69, in technical_500_response
+  File "/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/venv/lib/python3.12/site-packages/django/views/debug.py", line 426, in get_traceback_html
+  File "/opt/homebrew/Cellar/python@3.12/3.12.12/Frameworks/Python.framework/Versions/3.12/lib/python3.12/pathlib.py", line 1013, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/Users/pelin/Downloads/Fleet Management System/fleet_management_backend/venv/lib/python3.12/site-packages/django/views/templates/technical_500.html'
+[26/Nov/2025 22:29:57] "GET /api/user HTTP/1.1" 500 59
