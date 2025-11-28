@@ -1,38 +1,35 @@
 
 import React, { useState, useMemo } from 'react';
-import { 
-  MOCK_TRIPS, 
-  MOCK_EXPENSES, 
-  MOCK_VEHICLES, 
-  MOCK_CUSTOMERS, 
-  convertToUSD, 
+import {
+  convertToUSD,
   formatCurrency,
-  mockMonthlyData
 } from '../services/mockData';
+import { ReportFilter, Trip, Expense, Vehicle, Customer } from '../types';
+import { trips as tripApi, expenses as expenseApi, vehicles as vehicleApi, customers as customerApi } from '../services/api';
 import { ReportFilter } from '../types';
 import { Badge } from './ui/Badge';
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer, 
-  LineChart, 
-  Line, 
-  PieChart, 
-  Pie, 
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  PieChart,
+  Pie,
   Cell,
   Legend
 } from 'recharts';
-import { 
-  Filter, 
-  Download, 
-  Calendar, 
-  TrendingUp, 
-  TrendingDown, 
-  DollarSign, 
+import {
+  Filter,
+  Download,
+  Calendar,
+  TrendingUp,
+  TrendingDown,
+  DollarSign,
   AlertCircle,
   Truck
 } from 'lucide-react';
@@ -44,11 +41,39 @@ const Reports: React.FC = () => {
     customerId: 'All'
   });
 
+  const [trips, setTrips] = useState<Trip[]>([]);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  React.useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [tripsData, expensesData, vehiclesData, customersData] = await Promise.all([
+          tripApi.getAll(),
+          expenseApi.getAll(),
+          vehicleApi.getAll(),
+          customerApi.getAll()
+        ]);
+        setTrips(tripsData);
+        setExpenses(expensesData);
+        setVehicles(vehiclesData);
+        setCustomers(customersData);
+      } catch (error) {
+        console.error('Failed to fetch report data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
   // --- Data Processing & Filtering Logic ---
 
   const filteredData = useMemo(() => {
     // 1. Filter Trips
-    const trips = MOCK_TRIPS.filter(t => {
+    const filteredTrips = trips.filter(t => {
       const matchVehicle = filters.vehicleId === 'All' || t.vehicleId === filters.vehicleId;
       const matchCustomer = filters.customerId === 'All' || t.customerId === filters.customerId;
       // Date filtering would go here in a real app (comparing t.startDate)
@@ -56,15 +81,15 @@ const Reports: React.FC = () => {
     });
 
     // 2. Filter Expenses
-    const expenses = MOCK_EXPENSES.filter(e => {
+    const filteredExpenses = expenses.filter(e => {
       const matchVehicle = filters.vehicleId === 'All' || e.vehicleId === filters.vehicleId;
       // Filter out trip expenses if filtering by customer (unless we link trip expenses to customers via tripId)
       // For simplicity, we include all expenses if customer is 'All', otherwise rough filter
       return matchVehicle;
     });
 
-    return { trips, expenses };
-  }, [filters]);
+    return { trips: filteredTrips, expenses: filteredExpenses };
+  }, [filters, trips, expenses]);
 
   // --- KPI Calculations ---
 
@@ -82,7 +107,7 @@ const Reports: React.FC = () => {
   // --- Chart Data Preparation ---
 
   // 1. Profit by Vehicle (Aggregated)
-  const vehicleProfitData = MOCK_VEHICLES.map(v => {
+  const vehicleProfitData = vehicles.map(v => {
     // Only include if matches filter
     if (filters.vehicleId !== 'All' && filters.vehicleId !== v.id) return null;
 
@@ -114,13 +139,41 @@ const Reports: React.FC = () => {
 
   // 3. Outstanding Payments
   const outstandingTrips = filteredData.trips.filter(t => {
-    const paid = t.payments.reduce((s, p) => s + p.amount, 0);
+    const paid = t.payments ? t.payments.reduce((s, p) => s + p.amount, 0) : 0;
     return (t.totalPrice - paid) > 0;
   }).sort((a, b) => {
-    const balA = a.totalPrice - a.payments.reduce((s, p) => s + p.amount, 0);
-    const balB = b.totalPrice - b.payments.reduce((s, p) => s + p.amount, 0);
+    const balA = a.totalPrice - (a.payments ? a.payments.reduce((s, p) => s + p.amount, 0) : 0);
+    const balB = b.totalPrice - (b.payments ? b.payments.reduce((s, p) => s + p.amount, 0) : 0);
     return balB - balA; // Descending
   });
+
+  // 4. Monthly Trend (Aggregated from real data)
+  const monthlyData = useMemo(() => {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const data = months.map(name => ({ name, Income: 0, Expenses: 0, Profit: 0 }));
+
+    filteredData.trips.forEach(t => {
+      const date = new Date(t.startDate);
+      if (!isNaN(date.getTime())) {
+        const monthIndex = date.getMonth();
+        data[monthIndex].Income += convertToUSD(t.totalPrice, t.currency);
+      }
+    });
+
+    filteredData.expenses.forEach(e => {
+      const date = new Date(e.date);
+      if (!isNaN(date.getTime())) {
+        const monthIndex = date.getMonth();
+        data[monthIndex].Expenses += convertToUSD(e.amount, e.currency);
+      }
+    });
+
+    data.forEach(d => {
+      d.Profit = d.Income - d.Expenses;
+    });
+
+    return data;
+  }, [filteredData]);
 
   // Colors
   const COLORS = {
@@ -130,6 +183,14 @@ const Reports: React.FC = () => {
     steel: '#64748B',
     pie: ['#1E3A8A', '#F97316', '#3b82f6', '#64748B', '#94a3b8']
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -151,14 +212,14 @@ const Reports: React.FC = () => {
           <Filter className="w-5 h-5" />
           <span>Filters:</span>
         </div>
-        
+
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full md:w-auto flex-1">
           <div className="relative">
             <Calendar className="absolute left-3 top-2.5 w-4 h-4 text-steel" />
-            <select 
+            <select
               className="w-full pl-9 pr-4 py-2 border border-steel-lighter rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary text-steel bg-white appearance-none"
               value={filters.dateRange}
-              onChange={(e) => setFilters({...filters, dateRange: e.target.value})}
+              onChange={(e) => setFilters({ ...filters, dateRange: e.target.value })}
             >
               <option>Today</option>
               <option>This Week</option>
@@ -170,13 +231,13 @@ const Reports: React.FC = () => {
 
           <div className="relative">
             <Truck className="absolute left-3 top-2.5 w-4 h-4 text-steel" />
-            <select 
+            <select
               className="w-full pl-9 pr-4 py-2 border border-steel-lighter rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary text-steel bg-white appearance-none"
               value={filters.vehicleId}
-              onChange={(e) => setFilters({...filters, vehicleId: e.target.value})}
+              onChange={(e) => setFilters({ ...filters, vehicleId: e.target.value })}
             >
               <option value="All">All Vehicles</option>
-              {MOCK_VEHICLES.map(v => (
+              {vehicles.map(v => (
                 <option key={v.id} value={v.id}>{v.make} {v.model} ({v.licensePlate})</option>
               ))}
             </select>
@@ -184,20 +245,20 @@ const Reports: React.FC = () => {
 
           <div className="relative">
             <TrendingUp className="absolute left-3 top-2.5 w-4 h-4 text-steel" />
-            <select 
+            <select
               className="w-full pl-9 pr-4 py-2 border border-steel-lighter rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary text-steel bg-white appearance-none"
               value={filters.customerId}
-              onChange={(e) => setFilters({...filters, customerId: e.target.value})}
+              onChange={(e) => setFilters({ ...filters, customerId: e.target.value })}
             >
               <option value="All">All Customers</option>
-              {MOCK_CUSTOMERS.map(c => (
+              {customers.map(c => (
                 <option key={c.id} value={c.id}>{c.name}</option>
               ))}
             </select>
           </div>
         </div>
 
-        <button 
+        <button
           className="text-sm text-secondary font-medium hover:underline whitespace-nowrap"
           onClick={() => setFilters({ dateRange: 'This Year', vehicleId: 'All', customerId: 'All' })}
         >
@@ -256,11 +317,11 @@ const Reports: React.FC = () => {
           <h3 className="text-xl font-bold text-primary mb-6">Financial Trend (Monthly)</h3>
           <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={mockMonthlyData}>
+              <LineChart data={monthlyData}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                 <XAxis dataKey="name" axisLine={false} tickLine={false} stroke="#94a3b8" />
-                <YAxis axisLine={false} tickLine={false} stroke="#94a3b8" tickFormatter={(val) => `$${val/1000}k`} />
-                <Tooltip 
+                <YAxis axisLine={false} tickLine={false} stroke="#94a3b8" tickFormatter={(val) => `$${val / 1000}k`} />
+                <Tooltip
                   contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0' }}
                   formatter={(value: number) => [`$${value}`, '']}
                 />
@@ -282,7 +343,7 @@ const Reports: React.FC = () => {
                 <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#e2e8f0" />
                 <XAxis type="number" hide />
                 <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} stroke="#475569" width={80} style={{ fontSize: '12px', fontWeight: 500 }} />
-                <Tooltip 
+                <Tooltip
                   cursor={{ fill: '#f8fafc' }}
                   contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0' }}
                 />
@@ -301,7 +362,7 @@ const Reports: React.FC = () => {
         <div className="bg-surface p-6 rounded-xl border border-steel-lighter shadow-sm">
           <h3 className="text-xl font-bold text-primary mb-2">Expense Analysis</h3>
           <p className="text-sm text-steel mb-6">Breakdown by category</p>
-          
+
           <div className="h-[250px] relative">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -329,7 +390,7 @@ const Reports: React.FC = () => {
               </div>
             </div>
           </div>
-          
+
           <div className="mt-4 grid grid-cols-2 gap-2">
             {pieData.map((entry, index) => (
               <div key={index} className="flex items-center gap-2 text-xs">
@@ -344,19 +405,19 @@ const Reports: React.FC = () => {
         {/* Outstanding Payments Table */}
         <div className="lg:col-span-2 bg-surface p-6 rounded-xl border border-steel-lighter shadow-sm flex flex-col">
           <div className="flex justify-between items-center mb-6">
-             <div>
-               <h3 className="text-xl font-bold text-primary">Accounts Receivable</h3>
-               <p className="text-sm text-steel">Outstanding trip payments</p>
-             </div>
-             <div className="text-right">
-                <p className="text-xs text-steel uppercase font-bold">Total Pending</p>
-                <p className="text-xl font-bold text-secondary">
-                  {formatCurrency(outstandingTrips.reduce((sum, t) => {
-                     const paid = t.payments.reduce((p, c) => p + c.amount, 0);
-                     return sum + (t.totalPrice - paid);
-                  }, 0))}
-                </p>
-             </div>
+            <div>
+              <h3 className="text-xl font-bold text-primary">Accounts Receivable</h3>
+              <p className="text-sm text-steel">Outstanding trip payments</p>
+            </div>
+            <div className="text-right">
+              <p className="text-xs text-steel uppercase font-bold">Total Pending</p>
+              <p className="text-xl font-bold text-secondary">
+                {formatCurrency(outstandingTrips.reduce((sum, t) => {
+                  const paid = t.payments.reduce((p, c) => p + c.amount, 0);
+                  return sum + (t.totalPrice - paid);
+                }, 0))}
+              </p>
+            </div>
           </div>
 
           <div className="flex-1 overflow-auto">
