@@ -92,6 +92,8 @@ jobs:
             DEBUG=False
             ALLOWED_HOSTS=${{ secrets.DOMAIN_NAME }},localhost,127.0.0.1
             SECRET_KEY=${{ secrets.SECRET_KEY }}
+            GH_TOKEN=${{ secrets.GH_TOKEN }}
+            GH_REPO=${{ secrets.GH_REPO }}
             EOF
             
             docker compose -f docker-compose.prod.yml pull

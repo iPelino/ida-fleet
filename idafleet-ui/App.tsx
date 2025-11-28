@@ -9,6 +9,7 @@ import Customers from './components/Customers';
 import Reports from './components/Reports';
 import Settings from './components/Settings';
 import Login from './components/Login';
+import FeedbackWidget from './components/FeedbackWidget';
 import {
   LayoutDashboard,
   Truck,
@@ -263,6 +264,7 @@ const AppContent: React.FC = () => {
           </div>
         </div>
       </main>
+      <FeedbackWidget />
     </div>
   );
 }

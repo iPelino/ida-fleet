@@ -24,6 +24,7 @@ urlpatterns = [
     path('api/user', UserView.as_view(), name='user'),
     path('api/roles', RoleListView.as_view(), name='roles'),
     path('api/', include(router.urls)),
+    path('api/support/', include('apps.support.urls')),
     # Swagger
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
