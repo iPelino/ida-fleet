@@ -68,7 +68,7 @@ jobs:
           host: ${{ secrets.DO_HOST }}
           username: ${{ secrets.DO_USERNAME }}
           key: ${{ secrets.DO_SSH_KEY }}
-          source: "docker-compose.prod.yml,nginx/nginx.conf"
+          source: "docker-compose.prod.yml,nginx"
           target: "app"
 
       - name: Deploy to Digital Ocean
@@ -97,3 +97,4 @@ jobs:
             
             docker compose -f docker-compose.prod.yml pull
             docker compose -f docker-compose.prod.yml up -d --remove-orphans
+            docker compose -f docker-compose.prod.yml restart nginx
