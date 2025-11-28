@@ -91,7 +91,6 @@ jobs:
             DOMAIN_NAME=${{ secrets.DOMAIN_NAME }}
             DEBUG=False
             ALLOWED_HOSTS=${{ secrets.DOMAIN_NAME }},localhost,127.0.0.1
-            DATABASE_URL=postgres://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@db:5432/${{ secrets.POSTGRES_DB }}
             SECRET_KEY=${{ secrets.SECRET_KEY }}
             EOF
             
