@@ -156,4 +156,32 @@ export const users = {
     },
 };
 
+export const reminders = {
+    getAll: async () => {
+        const response = await api.get('/reminders/');
+        return response.data.map((reminder: any) => ({
+            ...reminder,
+            id: String(reminder.id),
+            vehicleId: String(reminder.vehicle),
+        }));
+    },
+    create: async (data: any) => {
+        const response = await api.post('/reminders/', {
+            ...data,
+            vehicle: data.vehicleId,
+        });
+        return response.data;
+    },
+    update: async (id: string, data: any) => {
+        const response = await api.patch(`/reminders/${id}/`, {
+            ...data,
+            vehicle: data.vehicleId,
+        });
+        return response.data;
+    },
+    delete: async (id: string) => {
+        await api.delete(`/reminders/${id}/`);
+    },
+};
+
 export default api;
