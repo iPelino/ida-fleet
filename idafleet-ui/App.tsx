@@ -130,7 +130,7 @@ const AppContent: React.FC = () => {
         <div className="h-full flex flex-col">
           {/* Logo Section */}
           <div className="p-6 border-b border-white/10 flex justify-center">
-            <Logo size="md" variant="outline" />
+            <Logo size="lg" variant="outline" />
           </div>
 
           {/* Nav */}
