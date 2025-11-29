@@ -9,6 +9,13 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     restart: always
 
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis_data:/data
+    restart: always
+    command: redis-server --appendonly yes
+
   backend:
     image: ghcr.io/${GITHUB_REPOSITORY}/fleet-backend:latest
     command: gunicorn fleet_management.wsgi:application --bind 0.0.0.0:8000
@@ -20,8 +27,37 @@ services:
       - .env
     environment:
       - DOMAIN_NAME=${DOMAIN_NAME}
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
     depends_on:
       - db
+      - redis
+    restart: always
+
+  celery_worker:
+    image: ghcr.io/${GITHUB_REPOSITORY}/fleet-backend:latest
+    command: celery -A fleet_management worker -l info
+    env_file:
+      - .env
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
+    restart: always
+
+  celery_beat:
+    image: ghcr.io/${GITHUB_REPOSITORY}/fleet-backend:latest
+    command: celery -A fleet_management beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    env_file:
+      - .env
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
     restart: always
 
   frontend:
@@ -44,4 +80,5 @@ services:
 
 volumes:
   postgres_data:
+  redis_data:
   static_volume:

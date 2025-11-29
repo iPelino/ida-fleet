@@ -3,8 +3,8 @@
 
 import React, { useState } from 'react';
 import { useCurrency } from '../services/currencyContext';
-import { MOCK_USERS, MOCK_REMINDERS, MOCK_VEHICLES } from '../services/mockData';
-import { User, Role, Reminder, ReminderType, ReminderStatus } from '../types';
+
+import { User, Role, Reminder, ReminderType, ReminderStatus, Vehicle } from '../types';
 import { Save, RefreshCw, DollarSign, Globe, TrendingUp, Users, Plus, Shield, Mail, MoreVertical, Trash2, X, Bell, Calendar, CheckCircle, Clock, ChevronDown, Check, Search, AlertCircle } from 'lucide-react';
 import { Badge } from './ui/Badge';
 
@@ -32,11 +32,17 @@ const Settings: React.FC<SettingsProps> = ({ userRole }) => {
     password: ''
   });
 
-  // Fetch users and roles on mount
+  // Vehicles State (for reminder modal)
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+
+  // Fetch users, roles, reminders, and vehicles on mount
   React.useEffect(() => {
     if (activeTab === 'users') {
       fetchUsers();
       fetchRoles();
+    } else if (activeTab === 'reminders') {
+      fetchReminders();
+      fetchVehicles();
     }
   }, [activeTab]);
 
@@ -66,8 +72,26 @@ const Settings: React.FC<SettingsProps> = ({ userRole }) => {
     }
   };
 
+  const fetchReminders = async () => {
+    try {
+      const data = await import('../services/api').then(m => m.reminders.getAll());
+      setReminders(data);
+    } catch (error) {
+      console.error("Failed to fetch reminders", error);
+    }
+  };
+
+  const fetchVehicles = async () => {
+    try {
+      const data = await import('../services/api').then(m => m.vehicles.getAll());
+      setVehicles(data);
+    } catch (error) {
+      console.error("Failed to fetch vehicles", error);
+    }
+  };
+
   // Reminders State
-  const [reminders, setReminders] = useState<Reminder[]>(MOCK_REMINDERS);
+  const [reminders, setReminders] = useState<Reminder[]>([]);
   const [isReminderModalOpen, setIsReminderModalOpen] = useState(false);
   const [newReminder, setNewReminder] = useState<Partial<Reminder>>({
     vehicleId: '',
@@ -137,57 +161,83 @@ const Settings: React.FC<SettingsProps> = ({ userRole }) => {
   };
 
   // --- Handlers: Reminders ---
-  const handleAddReminder = (e: React.FormEvent) => {
+  const handleAddReminder = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newReminder.vehicleId || !newReminder.title || !newReminder.dueDate) return;
 
-    const reminder: Reminder = {
-      id: `r${Date.now()}`,
-      vehicleId: newReminder.vehicleId,
-      title: newReminder.title,
-      type: newReminder.type as ReminderType,
-      dueDate: newReminder.dueDate,
-      notes: newReminder.notes,
-      emailNotification: newReminder.emailNotification || false,
-      status: 'Pending'
-    };
+    try {
+      const api = await import('../services/api');
+      await api.reminders.create({
+        vehicleId: newReminder.vehicleId,
+        title: newReminder.title,
+        type: newReminder.type,
+        dueDate: newReminder.dueDate,
+        notes: newReminder.notes,
+        emailNotification: newReminder.emailNotification || false,
+        status: 'Pending'
+      });
 
-    setReminders([...reminders, reminder]);
-    setIsReminderModalOpen(false);
-    setNewReminder({
-      vehicleId: '',
-      title: '',
-      type: 'Insurance',
-      dueDate: '',
-      notes: '',
-      emailNotification: false,
-      status: 'Pending'
-    });
+      await fetchReminders();
+      setIsReminderModalOpen(false);
+      setNewReminder({
+        vehicleId: '',
+        title: '',
+        type: 'Insurance',
+        dueDate: '',
+        notes: '',
+        emailNotification: false,
+        status: 'Pending'
+      });
+    } catch (error) {
+      console.error("Failed to create reminder", error);
+      alert("Failed to create reminder. Please try again.");
+    }
   };
 
-  const handleToggleReminderStatus = (id: string) => {
-    setReminders(reminders.map(r => {
-      if (r.id === id) {
-        return {
-          ...r,
-          status: r.status === 'Pending' || r.status === 'Overdue' ? 'Completed' : 'Pending'
-        };
-      }
-      return r;
-    }));
+  const handleToggleReminderStatus = async (id: string) => {
+    const reminder = reminders.find(r => r.id === id);
+    if (!reminder) return;
+
+    const newStatus = reminder.status === 'Pending' || reminder.status === 'Overdue' ? 'Completed' : 'Pending';
+
+    try {
+      const api = await import('../services/api');
+      await api.reminders.update(id, {
+        ...reminder,
+        status: newStatus
+      });
+
+      // Update local state
+      setReminders(reminders.map(r => {
+        if (r.id === id) {
+          return { ...r, status: newStatus };
+        }
+        return r;
+      }));
+    } catch (error) {
+      console.error("Failed to update reminder status", error);
+      alert("Failed to update reminder status.");
+    }
   };
 
-  const handleDeleteReminder = (id: string) => {
+  const handleDeleteReminder = async (id: string) => {
     if (confirm('Delete this reminder?')) {
-      setReminders(reminders.filter(r => r.id !== id));
+      try {
+        const api = await import('../services/api');
+        await api.reminders.delete(id);
+        setReminders(reminders.filter(r => r.id !== id));
+      } catch (error) {
+        console.error("Failed to delete reminder", error);
+        alert("Failed to delete reminder.");
+      }
     }
   };
 
   // Filtered vehicles for searchable select
-  const filteredVehicles = MOCK_VEHICLES.filter(v =>
+  const filteredVehicles = vehicles.filter(v =>
     `${v.make} ${v.model} ${v.licensePlate}`.toLowerCase().includes(vehicleSearch.toLowerCase())
   );
-  const selectedVehicleObj = MOCK_VEHICLES.find(v => v.id === newReminder.vehicleId);
+  const selectedVehicleObj = vehicles.find(v => v.id === newReminder.vehicleId);
 
 
   return (
@@ -448,7 +498,7 @@ const Settings: React.FC<SettingsProps> = ({ userRole }) => {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {reminders.map(reminder => {
-                  const vehicle = MOCK_VEHICLES.find(v => v.id === reminder.vehicleId);
+                  const vehicle = vehicles.find(v => v.id === reminder.vehicleId);
                   const isOverdue = new Date(reminder.dueDate) < new Date() && reminder.status !== 'Completed';
                   const status = isOverdue ? 'Overdue' : reminder.status;
 
