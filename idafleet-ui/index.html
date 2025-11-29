@@ -1,73 +1,103 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>IDA Logistics</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            colors: {
-              primary: {
-                DEFAULT: '#1E3A8A', // Logistics Navy
-                hover: '#172554',
-                foreground: '#ffffff',
-              },
-              secondary: {
-                DEFAULT: '#F97316', // Safety Orange
-                hover: '#ea580c',
-                foreground: '#ffffff',
-              },
-              steel: {
-                DEFAULT: '#64748B', // Steel Grey
-                light: '#94a3b8',
-                lighter: '#e2e8f0',
-              },
-              surface: '#FFFFFF', // Pure White
-              background: '#F8FAFC', // Light background
-              success: '#22c55e', // Green for Delivered
-              info: '#3b82f6', // Blue for In Transit
-              warning: '#F97316', // Orange for Pending/Alerts (Sharing brand secondary)
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Primary Meta Tags -->
+  <title>IDA Logistics - Fleet Management System</title>
+  <meta name="title" content="IDA Logistics - Fleet Management System">
+  <meta name="description"
+    content="Professional fleet management and logistics platform for IDA Ltd. Track vehicles, manage shipments, expenses, and customers efficiently.">
+  <meta name="theme-color" content="#1E3A8A">
+
+  <!-- Favicons -->
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon.png">
+  <link rel="apple-touch-icon" href="/logo.png">
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="IDA Logistics - Fleet Management System">
+  <meta property="og:description" content="Professional fleet management and logistics platform for IDA Ltd.">
+  <meta property="og:image" content="/logo.png">
+
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary">
+  <meta property="twitter:title" content="IDA Logistics - Fleet Management System">
+  <meta property="twitter:description" content="Professional fleet management and logistics platform for IDA Ltd.">
+  <meta property="twitter:image" content="/logo.png">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: {
+              DEFAULT: '#1E3A8A', // Logistics Navy
+              hover: '#172554',
+              foreground: '#ffffff',
             },
-            fontFamily: {
-              sans: ['Inter', 'system-ui', 'sans-serif'],
+            secondary: {
+              DEFAULT: '#F97316', // Safety Orange
+              hover: '#ea580c',
+              foreground: '#ffffff',
             },
-            borderRadius: {
-              'xl': '0.75rem',
-              '2xl': '1rem',
-            }
+            steel: {
+              DEFAULT: '#64748B', // Steel Grey
+              light: '#94a3b8',
+              lighter: '#e2e8f0',
+            },
+            surface: '#FFFFFF', // Pure White
+            background: '#F8FAFC', // Light background
+            success: '#22c55e', // Green for Delivered
+            info: '#3b82f6', // Blue for In Transit
+            warning: '#F97316', // Orange for Pending/Alerts (Sharing brand secondary)
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+          borderRadius: {
+            'xl': '0.75rem',
+            '2xl': '1rem',
           }
         }
       }
-    </script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-      body {
-        font-family: 'Inter', sans-serif;
-        background-color: #F8FAFC;
-        color: #0F172A;
-      }
-      /* Custom scrollbar for better aesthetics */
-      ::-webkit-scrollbar {
-        width: 6px;
-        height: 6px;
-      }
-      ::-webkit-scrollbar-track {
-        background: transparent;
-      }
-      ::-webkit-scrollbar-thumb {
-        background: #cbd5e1;
-        border-radius: 3px;
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background: #94a3b8;
-      }
-      .card-shadow {
-        box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-      }
-    </style>
+    }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #F8FAFC;
+      color: #0F172A;
+    }
+
+    /* Custom scrollbar for better aesthetics */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    .card-shadow {
+      box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    }
+  </style>
   <script type="importmap">
 {
   "imports": {
@@ -79,10 +109,12 @@
   }
 }
 </script>
-<link rel="stylesheet" href="/index.css">
+  <link rel="stylesheet" href="/index.css">
 </head>
-  <body>
-    <div id="root"></div>
+
+<body>
+  <div id="root"></div>
   <script type="module" src="/index.tsx"></script>
 </body>
+
 </html>

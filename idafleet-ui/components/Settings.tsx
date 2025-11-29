@@ -192,17 +192,17 @@ const Settings: React.FC<SettingsProps> = ({ userRole }) => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="flex flex-col gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-primary">System Settings</h1>
-          <p className="text-steel mt-1">Configure global application parameters and access.</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-primary">System Settings</h1>
+          <p className="text-steel mt-1 text-sm">Configure global application parameters and access.</p>
         </div>
 
         {/* Tabs */}
-        <div className="bg-white p-1 rounded-lg border border-steel-lighter flex gap-1 overflow-x-auto">
+        <div className="bg-white p-1 rounded-lg border border-steel-lighter flex gap-1 overflow-x-auto scrollbar-hide">
           <button
             onClick={() => setActiveTab('general')}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${activeTab === 'general'
+            className={`px-3 md:px-4 py-2 rounded-md text-xs md:text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 ${activeTab === 'general'
               ? 'bg-primary text-white shadow-sm'
               : 'text-steel hover:text-primary hover:bg-slate-50'
               }`}
@@ -214,7 +214,7 @@ const Settings: React.FC<SettingsProps> = ({ userRole }) => {
             <>
               <button
                 onClick={() => setActiveTab('users')}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${activeTab === 'users'
+                className={`px-3 md:px-4 py-2 rounded-md text-xs md:text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 ${activeTab === 'users'
                   ? 'bg-primary text-white shadow-sm'
                   : 'text-steel hover:text-primary hover:bg-slate-50'
                   }`}
@@ -223,7 +223,7 @@ const Settings: React.FC<SettingsProps> = ({ userRole }) => {
               </button>
               <button
                 onClick={() => setActiveTab('reminders')}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${activeTab === 'reminders'
+                className={`px-3 md:px-4 py-2 rounded-md text-xs md:text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 ${activeTab === 'reminders'
                   ? 'bg-primary text-white shadow-sm'
                   : 'text-steel hover:text-primary hover:bg-slate-50'
                   }`}
@@ -519,8 +519,8 @@ const Settings: React.FC<SettingsProps> = ({ userRole }) => {
 
       {/* Add User Modal */}
       {isUserModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
-          <div className="bg-surface w-full max-w-md rounded-xl shadow-xl border border-steel-lighter">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-2 sm:p-4">
+          <div className="bg-surface w-full max-w-md rounded-xl shadow-xl border border-steel-lighter max-h-[95vh] overflow-y-auto">
             <div className="p-6 border-b border-steel-lighter flex justify-between items-center bg-slate-50/50">
               <div>
                 <h2 className="text-xl font-bold text-primary">Add Team Member</h2>
@@ -612,8 +612,8 @@ const Settings: React.FC<SettingsProps> = ({ userRole }) => {
 
       {/* Add Reminder Modal */}
       {isReminderModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
-          <div className="bg-surface w-full max-w-lg rounded-xl shadow-xl border border-steel-lighter max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-2 sm:p-4">
+          <div className="bg-surface w-full max-w-lg rounded-xl shadow-xl border border-steel-lighter max-h-[95vh] overflow-y-auto">
             <div className="p-6 border-b border-steel-lighter flex justify-between items-center bg-slate-50/50">
               <div>
                 <h2 className="text-xl font-bold text-primary">Add New Reminder</h2>

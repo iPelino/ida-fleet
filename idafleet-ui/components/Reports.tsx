@@ -6,7 +6,7 @@ import {
 } from '../services/mockData';
 import { ReportFilter, Trip, Expense, Vehicle, Customer } from '../types';
 import { trips as tripApi, expenses as expenseApi, vehicles as vehicleApi, customers as customerApi } from '../services/api';
-import { ReportFilter } from '../types';
+
 import { Badge } from './ui/Badge';
 import {
   BarChart,

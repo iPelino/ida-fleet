@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Truck, ArrowRight, Lock, Mail, AlertCircle } from 'lucide-react';
 import { Role } from '../types';
+import Logo from './Logo';
 
 interface LoginProps {
   onLogin: (user: { name: string; email: string; role: Role }) => void;
@@ -75,11 +76,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         }}></div>
 
         {/* Logo */}
-        <div className="relative z-10 flex items-center gap-3">
-          <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
-            <span className="text-primary font-bold text-xl">I</span>
-          </div>
-          <span className="text-2xl font-bold tracking-tight">IDA Logistics</span>
+        <div className="relative z-10">
+          <Logo size="3xl" variant="outline" />
         </div>
 
         {/* Hero Text */}
@@ -104,9 +102,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
           <div className="text-center lg:text-left">
             <div className="lg:hidden flex justify-center mb-6">
-              <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-2xl">I</span>
-              </div>
+              <Logo size="lg" variant="filled" />
             </div>
             <h2 className="text-3xl font-bold text-slate-900">Welcome back</h2>
             <p className="mt-2 text-slate-600">Enter your credentials to access the client portal.</p>
@@ -165,28 +161,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
             </button>
           </form>
 
-          {/* Helper for Demo */}
-          <div className="mt-8 pt-6 border-t border-slate-200">
-            <p className="text-xs text-center text-slate-500 uppercase tracking-wider font-medium mb-4">Demo Credentials</p>
-            <div className="grid grid-cols-2 gap-4">
-              <button
-                type="button"
-                onClick={() => { setEmail('test@example.com'); setPassword('password123'); }}
-                className="p-3 rounded-lg border border-slate-200 hover:border-primary hover:bg-blue-50 transition-all text-left group"
-              >
-                <p className="text-sm font-bold text-slate-700 group-hover:text-primary">Admin User</p>
-                <p className="text-xs text-slate-500">Full Access</p>
-              </button>
-              <button
-                type="button"
-                onClick={() => { setEmail('employee@idalogistics.com'); setPassword('password'); }}
-                className="p-3 rounded-lg border border-slate-200 hover:border-primary hover:bg-blue-50 transition-all text-left group"
-              >
-                <p className="text-sm font-bold text-slate-700 group-hover:text-primary">Employee</p>
-                <p className="text-xs text-slate-500">Restricted</p>
-              </button>
-            </div>
-          </div>
+
         </div>
       </div>
     </div>

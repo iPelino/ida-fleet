@@ -10,6 +10,7 @@ import Reports from './components/Reports';
 import Settings from './components/Settings';
 import Login from './components/Login';
 import FeedbackWidget from './components/FeedbackWidget';
+import Logo from './components/Logo';
 import {
   LayoutDashboard,
   Truck,
@@ -128,14 +129,8 @@ const AppContent: React.FC = () => {
       <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-primary text-white transform transition-transform duration-200 ease-in-out lg:translate-x-0 lg:static lg:inset-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="h-full flex flex-col">
           {/* Logo Section */}
-          <div className="p-6 border-b border-white/10">
-            <h1 className="text-xl font-bold tracking-tight text-white flex items-center gap-3">
-              {/* Circle I Logo */}
-              <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
-                <span className="text-primary font-bold text-lg">I</span>
-              </div>
-              IDA Logistics
-            </h1>
+          <div className="p-6 border-b border-white/10 flex justify-center">
+            <Logo size="md" variant="outline" />
           </div>
 
           {/* Nav */}
