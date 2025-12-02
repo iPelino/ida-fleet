@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Expense, Currency } from '../types';
 import { Badge } from './ui/Badge';
-import { Plus, Filter, Search, Calendar, FileText, Truck, MapPin, Fuel, Wrench, Receipt, X, Save, DollarSign, ChevronDown, Check } from 'lucide-react';
+import { Plus, Filter, Search, Calendar, FileText, Truck, MapPin, Fuel, Wrench, Receipt, X, Save, DollarSign, ChevronDown, Check, PenTool, Trash2 } from 'lucide-react';
 import { useCurrency } from '../services/currencyContext';
 
 const Expenses: React.FC = () => {
@@ -42,6 +42,8 @@ const Expenses: React.FC = () => {
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<Partial<Expense>>({
     expenseType: 'vehicle',
     vehicleId: '',
@@ -116,19 +118,39 @@ const Expenses: React.FC = () => {
     }
 
     try {
-      const newExpense = await import('../services/api').then(m => m.expenses.create({
-        date: formData.date || new Date().toISOString().split('T')[0],
-        vehicle: formData.vehicleId,
-        trip: formData.expenseType === 'trip' ? formData.tripId : undefined,
-        expenseType: (formData.expenseType as 'vehicle' | 'trip') || 'vehicle',
-        category: formData.category || 'Other',
-        amount: formData.amount || 0,
-        currency: (formData.currency as Currency) || 'USD',
-        description: formData.description || '',
-      } as any));
+      if (isEditMode && editingId) {
+        // Update existing expense
+        const updatedExpense = await import('../services/api').then(m => m.expenses.update(editingId, {
+          date: formData.date || new Date().toISOString().split('T')[0],
+          vehicle: formData.vehicleId,
+          trip: formData.expenseType === 'trip' ? formData.tripId : undefined,
+          expenseType: (formData.expenseType as 'vehicle' | 'trip') || 'vehicle',
+          category: formData.category || 'Other',
+          amount: formData.amount || 0,
+          currency: (formData.currency as Currency) || 'USD',
+          description: formData.description || '',
+        } as any));
 
-      setExpenses([newExpense, ...expenses]);
+        setExpenses(expenses.map(e => e.id === editingId ? updatedExpense : e));
+      } else {
+        // Create new expense
+        const newExpense = await import('../services/api').then(m => m.expenses.create({
+          date: formData.date || new Date().toISOString().split('T')[0],
+          vehicle: formData.vehicleId,
+          trip: formData.expenseType === 'trip' ? formData.tripId : undefined,
+          expenseType: (formData.expenseType as 'vehicle' | 'trip') || 'vehicle',
+          category: formData.category || 'Other',
+          amount: formData.amount || 0,
+          currency: (formData.currency as Currency) || 'USD',
+          description: formData.description || '',
+        } as any));
+
+        setExpenses([newExpense, ...expenses]);
+      }
+      
       setIsModalOpen(false);
+      setIsEditMode(false);
+      setEditingId(null);
 
       // Reset Form
       setFormData({
@@ -144,15 +166,45 @@ const Expenses: React.FC = () => {
       setVehicleSearch('');
       setTripSearch('');
     } catch (error: any) {
-      console.error('Failed to create expense:', error);
+      console.error('Failed to save expense:', error);
       console.log('Error config:', error.config);
       console.log('Error response:', error.response);
 
-      let errorMessage = 'Failed to create expense. Please try again.';
+      let errorMessage = 'Failed to save expense. Please try again.';
       if (error.response?.data) {
         errorMessage = `Error: ${JSON.stringify(error.response.data)}`;
       }
       alert(errorMessage);
+    }
+  };
+
+  const handleEdit = (expense: Expense) => {
+    setFormData({
+      expenseType: expense.expenseType,
+      vehicleId: expense.vehicleId,
+      tripId: expense.tripId,
+      category: expense.category,
+      date: expense.date,
+      amount: expense.amount,
+      currency: expense.currency,
+      description: expense.description
+    });
+    setEditingId(expense.id);
+    setIsEditMode(true);
+    setIsModalOpen(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this expense?')) {
+      return;
+    }
+
+    try {
+      await import('../services/api').then(m => m.expenses.delete(id));
+      setExpenses(expenses.filter(e => e.id !== id));
+    } catch (error) {
+      console.error('Failed to delete expense:', error);
+      alert('Failed to delete expense. Please try again.');
     }
   };
 
@@ -265,7 +317,7 @@ const Expenses: React.FC = () => {
       {/* Expenses List */}
       <div className="space-y-4">
         {filteredExpenses.map(expense => (
-          <div key={expense.id} className="bg-surface p-4 rounded-xl border border-steel-lighter shadow-sm hover:shadow-md transition-shadow flex flex-col md:flex-row gap-4 md:items-center justify-between">
+          <div key={expense.id} className="bg-surface p-4 rounded-xl border border-steel-lighter shadow-sm hover:shadow-md transition-shadow flex flex-col md:flex-row gap-4 md:items-center justify-between group">
             <div className="flex gap-4 items-start">
               <div className="w-12 h-12 rounded-lg bg-slate-50 border border-steel-lighter flex items-center justify-center shrink-0">
                 {getCategoryIcon(expense.category)}
@@ -294,22 +346,38 @@ const Expenses: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex flex-row md:flex-col justify-between items-center md:items-end gap-1 pl-16 md:pl-0 border-t md:border-t-0 border-slate-100 pt-3 md:pt-0">
+            <div className="flex flex-row md:flex-col justify-between items-center md:items-end gap-2 pl-16 md:pl-0 border-t md:border-t-0 border-slate-100 pt-3 md:pt-0">
               <div className="flex items-center gap-2 text-sm text-steel">
                 <Calendar className="w-3 h-3" />
                 {expense.date}
               </div>
-              <div className="text-right">
-                {/* Converted Amount */}
-                <span className="text-lg font-bold text-secondary block">
-                  -{format(convert(expense.amount, expense.currency))}
-                </span>
-                {/* Original Amount Hint if different */}
-                {displayCurrency !== expense.currency && (
-                  <span className="text-xs text-steel-light">
-                    ({expense.currency} {expense.amount})
+              <div className="flex items-center gap-3">
+                <div className="text-right">
+                  {/* Converted Amount */}
+                  <span className="text-lg font-bold text-secondary block">
+                    -{format(convert(expense.amount, expense.currency))}
                   </span>
-                )}
+                  {/* Original Amount Hint if different */}
+                  {displayCurrency !== expense.currency && (
+                    <span className="text-xs text-steel-light">
+                      ({expense.currency} {expense.amount})
+                    </span>
+                  )}
+                </div>
+                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button 
+                    onClick={() => handleEdit(expense)}
+                    className="p-2 text-steel hover:text-primary hover:bg-blue-50 rounded-full transition-colors"
+                  >
+                    <PenTool className="w-4 h-4" />
+                  </button>
+                  <button 
+                    onClick={() => handleDelete(expense.id)}
+                    className="p-2 text-steel hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
             </div>
           </div>
