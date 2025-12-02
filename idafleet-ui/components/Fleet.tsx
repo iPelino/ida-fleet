@@ -13,6 +13,8 @@ const Fleet: React.FC = () => {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   React.useEffect(() => {
     const fetchVehicles = async () => {
@@ -74,19 +76,39 @@ const Fleet: React.FC = () => {
     }
 
     try {
-      const newVehicle = await import('../services/api').then(m => m.vehicles.create({
-        make: formData.make,
-        model: formData.model,
-        year: formData.year,
-        licensePlate: formData.licensePlate,
-        vin: formData.vin,
-        currentMileage: formData.currentMileage,
-        status: (formData.status as VehicleStatus) || 'Active',
-        notes: formData.notes
-      }));
+      if (isEditMode && editingId) {
+        // Update existing vehicle
+        const updatedVehicle = await import('../services/api').then(m => m.vehicles.update(editingId, {
+          make: formData.make,
+          model: formData.model,
+          year: formData.year,
+          licensePlate: formData.licensePlate,
+          vin: formData.vin,
+          currentMileage: formData.currentMileage,
+          status: (formData.status as VehicleStatus) || 'Active',
+          notes: formData.notes
+        }));
 
-      setVehicles([newVehicle, ...vehicles]);
+        setVehicles(vehicles.map(v => v.id === editingId ? updatedVehicle : v));
+      } else {
+        // Create new vehicle
+        const newVehicle = await import('../services/api').then(m => m.vehicles.create({
+          make: formData.make,
+          model: formData.model,
+          year: formData.year,
+          licensePlate: formData.licensePlate,
+          vin: formData.vin,
+          currentMileage: formData.currentMileage,
+          status: (formData.status as VehicleStatus) || 'Active',
+          notes: formData.notes
+        }));
+
+        setVehicles([newVehicle, ...vehicles]);
+      }
+      
       setIsModalOpen(false);
+      setIsEditMode(false);
+      setEditingId(null);
 
       // Reset form
       setFormData({
@@ -100,8 +122,38 @@ const Fleet: React.FC = () => {
         notes: ''
       });
     } catch (error) {
-      console.error('Failed to create vehicle:', error);
-      alert('Failed to create vehicle. Please try again.');
+      console.error('Failed to save vehicle:', error);
+      alert('Failed to save vehicle. Please try again.');
+    }
+  };
+
+  const handleEdit = (vehicle: Vehicle) => {
+    setFormData({
+      make: vehicle.make,
+      model: vehicle.model,
+      year: vehicle.year,
+      licensePlate: vehicle.licensePlate,
+      vin: vehicle.vin,
+      currentMileage: vehicle.currentMileage,
+      status: vehicle.status,
+      notes: vehicle.notes
+    });
+    setEditingId(vehicle.id);
+    setIsEditMode(true);
+    setIsModalOpen(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this vehicle?')) {
+      return;
+    }
+
+    try {
+      await import('../services/api').then(m => m.vehicles.delete(id));
+      setVehicles(vehicles.filter(v => v.id !== id));
+    } catch (error) {
+      console.error('Failed to delete vehicle:', error);
+      alert('Failed to delete vehicle. Please try again.');
     }
   };
 
@@ -154,7 +206,13 @@ const Fleet: React.FC = () => {
       {/* Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredVehicles.map(vehicle => (
-          <VehicleCard key={vehicle.id} vehicle={vehicle} statusVariant={getStatusVariant(vehicle.status)} />
+          <VehicleCard 
+            key={vehicle.id} 
+            vehicle={vehicle} 
+            statusVariant={getStatusVariant(vehicle.status)}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+          />
         ))}
         {filteredVehicles.length === 0 && (
           <div className="col-span-full py-12 text-center text-steel bg-surface rounded-xl border border-dashed border-steel-lighter">
@@ -173,11 +231,25 @@ const Fleet: React.FC = () => {
           <div className="bg-surface w-full max-w-2xl rounded-xl shadow-xl border border-steel-lighter max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-steel-lighter flex justify-between items-center bg-slate-50/50">
               <div>
-                <h2 className="text-xl font-bold text-primary">Add New Vehicle</h2>
-                <p className="text-sm text-steel mt-1">Enter the details of the new fleet vehicle.</p>
+                <h2 className="text-xl font-bold text-primary">{isEditMode ? 'Edit Vehicle' : 'Add New Vehicle'}</h2>
+                <p className="text-sm text-steel mt-1">{isEditMode ? 'Update the vehicle details.' : 'Enter the details of the new fleet vehicle.'}</p>
               </div>
               <button
-                onClick={() => setIsModalOpen(false)}
+                onClick={() => {
+                  setIsModalOpen(false);
+                  setIsEditMode(false);
+                  setEditingId(null);
+                  setFormData({
+                    make: '',
+                    model: '',
+                    year: new Date().getFullYear(),
+                    licensePlate: '',
+                    vin: '',
+                    currentMileage: 0,
+                    status: 'Active',
+                    notes: ''
+                  });
+                }}
                 className="text-steel hover:text-primary p-2 hover:bg-white rounded-full transition-colors"
               >
                 <X className="w-5 h-5" />
@@ -302,7 +374,21 @@ const Fleet: React.FC = () => {
               <div className="pt-4 flex items-center justify-end gap-3 border-t border-steel-lighter">
                 <button
                   type="button"
-                  onClick={() => setIsModalOpen(false)}
+                  onClick={() => {
+                    setIsModalOpen(false);
+                    setIsEditMode(false);
+                    setEditingId(null);
+                    setFormData({
+                      make: '',
+                      model: '',
+                      year: new Date().getFullYear(),
+                      licensePlate: '',
+                      vin: '',
+                      currentMileage: 0,
+                      status: 'Active',
+                      notes: ''
+                    });
+                  }}
                   className="px-4 py-2 text-sm font-medium text-steel hover:text-primary bg-white border border-steel-lighter rounded-lg hover:bg-slate-50 transition-colors"
                 >
                   Cancel
@@ -312,7 +398,7 @@ const Fleet: React.FC = () => {
                   className="px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary-hover rounded-lg shadow-sm flex items-center gap-2 transition-colors"
                 >
                   <Save className="w-4 h-4" />
-                  Save Vehicle
+                  {isEditMode ? 'Update Vehicle' : 'Save Vehicle'}
                 </button>
               </div>
             </form>
@@ -323,7 +409,12 @@ const Fleet: React.FC = () => {
   );
 };
 
-const VehicleCard: React.FC<{ vehicle: Vehicle; statusVariant: any }> = ({ vehicle, statusVariant }) => (
+const VehicleCard: React.FC<{ 
+  vehicle: Vehicle; 
+  statusVariant: any;
+  onEdit: (vehicle: Vehicle) => void;
+  onDelete: (id: string) => void;
+}> = ({ vehicle, statusVariant, onEdit, onDelete }) => (
   <div className="bg-surface rounded-xl border border-steel-lighter shadow-sm hover:shadow-md transition-all group">
     <div className="p-5">
       <div className="flex justify-between items-start mb-4">
@@ -357,10 +448,16 @@ const VehicleCard: React.FC<{ vehicle: Vehicle; statusVariant: any }> = ({ vehic
       <div className="flex items-center justify-between pt-4 border-t border-steel-lighter">
         <Badge variant={statusVariant}>{vehicle.status}</Badge>
         <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button className="p-2 text-steel hover:text-primary hover:bg-blue-50 rounded-full transition-colors">
+          <button 
+            onClick={() => onEdit(vehicle)}
+            className="p-2 text-steel hover:text-primary hover:bg-blue-50 rounded-full transition-colors"
+          >
             <PenTool className="w-4 h-4" />
           </button>
-          <button className="p-2 text-steel hover:text-red-600 hover:bg-red-50 rounded-full transition-colors">
+          <button 
+            onClick={() => onDelete(vehicle.id)}
+            className="p-2 text-steel hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
+          >
             <Trash2 className="w-4 h-4" />
           </button>
         </div>
