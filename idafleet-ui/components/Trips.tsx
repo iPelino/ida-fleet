@@ -4,23 +4,7 @@ import { formatCurrency } from '../services/mockData';
 import { Trip, TripStatus, Currency, Payment } from '../types';
 import { Badge } from './ui/Badge';
 import { MapPin, Calendar, Globe, Plus, X, Save, Truck, User, DollarSign, CreditCard, ArrowRight, Search, ChevronDown, Check, AlertCircle, FileText, Edit, Trash2 } from 'lucide-react';
-
-// Helper for currency conversion rates (simplified for frontend logic)
-const getExchangeRate = (from: string, to: string): number => {
-  if (from === to) return 1;
-
-  // Base rates to USD logic
-  let valInUSD = 0;
-  if (from === 'USD') valInUSD = 1;
-  else if (from === 'RWF') valInUSD = 1 / 1300;
-  else if (from === 'EUR') valInUSD = 1.1;
-
-  if (to === 'USD') return valInUSD;
-  if (to === 'RWF') return valInUSD * 1300;
-  if (to === 'EUR') return valInUSD / 1.1;
-
-  return 1;
-};
+import { useCurrency } from '../services/currencyContext';
 
 // Rwandan Districts
 const RWANDA_DISTRICTS = [
@@ -45,6 +29,7 @@ const NEIGHBORING_CITIES = [
 ];
 
 const Trips: React.FC = () => {
+  const { convert } = useCurrency();
   const [trips, setTrips] = useState<Trip[]>([]);
   const [customers, setCustomers] = useState<any[]>([]);
   const [vehicles, setVehicles] = useState<any[]>([]);
@@ -278,9 +263,8 @@ const Trips: React.FC = () => {
     const paidAmount = selectedTrip.payments.reduce((sum, p) => sum + p.amount, 0);
     const balance = selectedTrip.totalPrice - paidAmount;
 
-    // Convert payment amount to trip currency for validation
-    const rate = getExchangeRate(paymentData.currency, selectedTrip.currency);
-    const normalizedAmount = Number(paymentData.amount) * rate;
+    // Convert payment amount to trip currency for validation using global currency context
+    const normalizedAmount = convert(Number(paymentData.amount), paymentData.currency, selectedTrip.currency);
 
     if (normalizedAmount <= 0) {
       alert("Payment amount must be greater than zero.");
@@ -296,12 +280,10 @@ const Trips: React.FC = () => {
     try {
       const newPayment = await import('../services/api').then(m => m.payments.create({
         trip: selectedTrip.id,
-        amount: Number(normalizedAmount.toFixed(2)),
+        amount: Number(paymentData.amount),
+        currency: paymentData.currency,
         date: paymentData.date,
         type: paymentData.type,
-        // Backend doesn't expect 'currency' or 'originalAmount' on the model directly based on previous view, 
-        // but we'll send what the model expects. 
-        // The model has: trip, amount, date, type.
       }));
 
       // We need to construct the full payment object for frontend state if the backend response is minimal
@@ -311,8 +293,8 @@ const Trips: React.FC = () => {
       const paymentForState: Payment = {
         id: newPayment.id,
         amount: Number(newPayment.amount),
-        originalAmount: Number(paymentData.amount), // Keep this for display if needed
-        currency: paymentData.currency,
+        originalAmount: Number(newPayment.amount),
+        currency: newPayment.currency || paymentData.currency,
         date: newPayment.date,
         type: newPayment.type
       };
@@ -339,7 +321,7 @@ const Trips: React.FC = () => {
 
   // Calculate equivalent value for display in modal
   const equivalentValue = selectedTrip && paymentData.currency !== selectedTrip.currency
-    ? Number(paymentData.amount) * getExchangeRate(paymentData.currency, selectedTrip.currency)
+    ? convert(Number(paymentData.amount), paymentData.currency, selectedTrip.currency)
     : null;
 
   // Trip Details Modal State

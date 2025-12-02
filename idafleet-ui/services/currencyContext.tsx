@@ -2,11 +2,11 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { Currency } from '../types';
 
-// Initial default rates
+// Initial default rates (rates per 1 USD)
 const DEFAULT_RATES: Record<Currency, number> = {
-  USD: 1,
-  RWF: 1300,
-  EUR: 0.92,
+  USD: 1,      // Base currency
+  RWF: 1300,   // 1 USD = 1300 RWF
+  EUR: 0.91,   // 1 USD = 0.91 EUR (or 1 EUR = ~1.10 USD)
 };
 
 interface CurrencyContextType {
