@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { formatCurrency } from '../services/mockData';
 import { Trip, TripStatus, Currency, Payment } from '../types';
 import { Badge } from './ui/Badge';
-import { MapPin, Calendar, Globe, Plus, X, Save, Truck, User, DollarSign, CreditCard, ArrowRight, Search, ChevronDown, Check, AlertCircle, FileText } from 'lucide-react';
+import { MapPin, Calendar, Globe, Plus, X, Save, Truck, User, DollarSign, CreditCard, ArrowRight, Search, ChevronDown, Check, AlertCircle, FileText, Edit, Trash2 } from 'lucide-react';
 
 // Helper for currency conversion rates (simplified for frontend logic)
 const getExchangeRate = (from: string, to: string): number => {
@@ -53,6 +53,7 @@ const Trips: React.FC = () => {
 
   // New Shipment Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingTrip, setEditingTrip] = useState<Trip | null>(null);
   const [formData, setFormData] = useState<Partial<Trip>>({
     description: '',
     customerId: '',
@@ -144,6 +145,36 @@ const Trips: React.FC = () => {
     }));
   };
 
+  const handleEdit = (trip: Trip) => {
+    setEditingTrip(trip);
+    setFormData({
+      description: trip.description,
+      customerId: trip.customerId || '',
+      vehicleId: trip.vehicleId || '',
+      startDate: trip.startDate,
+      endDate: trip.endDate,
+      startLocation: trip.startLocation,
+      endLocation: trip.endLocation,
+      tripType: trip.tripType,
+      totalPrice: trip.totalPrice,
+      currency: trip.currency,
+      status: trip.status
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleDelete = async (tripId: string) => {
+    if (!confirm('Are you sure you want to delete this trip?')) return;
+
+    try {
+      await import('../services/api').then(m => m.trips.delete(tripId));
+      setTrips(trips.filter(t => t.id !== tripId));
+    } catch (error) {
+      console.error('Failed to delete trip:', error);
+      alert('Failed to delete trip. Please try again.');
+    }
+  };
+
   const handleNewTripSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -155,23 +186,45 @@ const Trips: React.FC = () => {
     try {
       const selectedCustomer = customers.find(c => c.id === formData.customerId);
 
-      const newTrip = await import('../services/api').then(m => m.trips.create({
-        customer: formData.customerId || '',
-        vehicle: formData.vehicleId || '',
-        description: formData.description || '',
-        startDate: formData.startDate || new Date().toISOString().split('T')[0],
-        endDate: formData.endDate || new Date().toISOString().split('T')[0], // Ensure endDate is present
-        startLocation: formData.startLocation || '',
-        endLocation: formData.endLocation || '',
-        tripType: (formData.tripType as 'local' | 'international') || 'local',
-        totalPrice: formData.totalPrice || 0,
-        currency: (formData.currency as Currency) || 'USD',
-        status: 'Pending',
-        payments: []
-      } as any));
+      if (editingTrip) {
+        // Update existing trip
+        const updatedTrip = await import('../services/api').then(m => m.trips.update(editingTrip.id, {
+          customer: formData.customerId || '',
+          vehicle: formData.vehicleId || '',
+          description: formData.description || '',
+          startDate: formData.startDate || new Date().toISOString().split('T')[0],
+          endDate: formData.endDate || new Date().toISOString().split('T')[0],
+          startLocation: formData.startLocation || '',
+          endLocation: formData.endLocation || '',
+          tripType: (formData.tripType as 'local' | 'international') || 'local',
+          totalPrice: formData.totalPrice || 0,
+          currency: (formData.currency as Currency) || 'USD',
+          status: formData.status || 'Pending'
+        } as any));
 
-      setTrips([newTrip, ...trips]);
+        setTrips(trips.map(t => t.id === editingTrip.id ? updatedTrip : t));
+      } else {
+        // Create new trip
+        const newTrip = await import('../services/api').then(m => m.trips.create({
+          customer: formData.customerId || '',
+          vehicle: formData.vehicleId || '',
+          description: formData.description || '',
+          startDate: formData.startDate || new Date().toISOString().split('T')[0],
+          endDate: formData.endDate || new Date().toISOString().split('T')[0],
+          startLocation: formData.startLocation || '',
+          endLocation: formData.endLocation || '',
+          tripType: (formData.tripType as 'local' | 'international') || 'local',
+          totalPrice: formData.totalPrice || 0,
+          currency: (formData.currency as Currency) || 'USD',
+          status: 'Pending',
+          payments: []
+        } as any));
+
+        setTrips([newTrip, ...trips]);
+      }
+
       setIsModalOpen(false);
+      setEditingTrip(null);
 
       // Reset form
       setFormData({
@@ -190,11 +243,11 @@ const Trips: React.FC = () => {
       setCustomerSearch('');
       setVehicleSearch('');
     } catch (error: any) {
-      console.error('Failed to create trip:', error);
+      console.error(`Failed to ${editingTrip ? 'update' : 'create'} trip:`, error);
       console.log('Error config:', error.config);
       console.log('Error response:', error.response);
 
-      let errorMessage = 'Failed to create trip. Please try again.';
+      let errorMessage = `Failed to ${editingTrip ? 'update' : 'create'} trip. Please try again.`;
       if (error.response?.data) {
         errorMessage = `Error: ${JSON.stringify(error.response.data)}`;
       }
@@ -337,6 +390,8 @@ const Trips: React.FC = () => {
             trip={trip}
             onRecordPayment={() => openPaymentModal(trip)}
             onViewDetails={() => openDetailsModal(trip)}
+            onEdit={() => handleEdit(trip)}
+            onDelete={() => handleDelete(trip.id)}
           />
         ))}
         {filteredTrips.length === 0 && (
@@ -501,7 +556,7 @@ const Trips: React.FC = () => {
           <div className="bg-surface w-full max-w-3xl rounded-xl shadow-xl border border-steel-lighter max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-steel-lighter flex justify-between items-center bg-slate-50/50">
               <div>
-                <h2 className="text-xl font-bold text-primary">Create New Shipment</h2>
+                <h2 className="text-xl font-bold text-primary">{editingTrip ? 'Edit Shipment' : 'Create New Shipment'}</h2>
                 <p className="text-sm text-steel mt-1">Enter shipment details and assign resources.</p>
               </div>
               <button
@@ -1022,7 +1077,7 @@ const Trips: React.FC = () => {
   );
 };
 
-const TripCard: React.FC<{ trip: Trip; onRecordPayment: () => void; onViewDetails: () => void }> = ({ trip, onRecordPayment, onViewDetails }) => {
+const TripCard: React.FC<{ trip: Trip; onRecordPayment: () => void; onViewDetails: () => void; onEdit: () => void; onDelete: () => void }> = ({ trip, onRecordPayment, onViewDetails, onEdit, onDelete }) => {
   const paidAmount = trip.payments.reduce((sum, p) => sum + p.amount, 0);
   const balance = trip.totalPrice - paidAmount;
   const isPaid = balance <= 0.01; // Tolerance for floating point
@@ -1141,6 +1196,20 @@ const TripCard: React.FC<{ trip: Trip; onRecordPayment: () => void; onViewDetail
             >
               <FileText className="w-4 h-4" />
               Details
+            </button>
+            <button
+              onClick={onEdit}
+              className="flex items-center justify-center gap-2 px-3 py-2 border border-steel-lighter text-primary hover:bg-slate-50 rounded-lg text-sm font-medium transition-colors"
+              title="Edit"
+            >
+              <Edit className="w-4 h-4" />
+            </button>
+            <button
+              onClick={onDelete}
+              className="flex items-center justify-center gap-2 px-3 py-2 border border-red-200 text-red-600 hover:bg-red-50 rounded-lg text-sm font-medium transition-colors"
+              title="Delete"
+            >
+              <Trash2 className="w-4 h-4" />
             </button>
           </div>
         </div>
