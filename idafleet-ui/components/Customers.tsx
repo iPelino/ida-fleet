@@ -35,6 +35,8 @@ const Customers: React.FC<CustomersProps> = ({ userRole }) => {
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<Partial<Customer>>({
     name: '',
     email: '',
@@ -84,15 +86,31 @@ const Customers: React.FC<CustomersProps> = ({ userRole }) => {
     }
 
     try {
-      const newCustomer = await import('../services/api').then(m => m.customers.create({
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone,
-        address: formData.address,
-      }));
+      if (isEditMode && editingId) {
+        // Update existing customer
+        const updatedCustomer = await import('../services/api').then(m => m.customers.update(editingId, {
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          address: formData.address,
+        }));
 
-      setCustomers([newCustomer, ...customers]);
+        setCustomers(customers.map(c => c.id === editingId ? updatedCustomer : c));
+      } else {
+        // Create new customer
+        const newCustomer = await import('../services/api').then(m => m.customers.create({
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          address: formData.address,
+        }));
+
+        setCustomers([newCustomer, ...customers]);
+      }
+      
       setIsModalOpen(false);
+      setIsEditMode(false);
+      setEditingId(null);
 
       // Reset Form
       setFormData({
@@ -102,8 +120,34 @@ const Customers: React.FC<CustomersProps> = ({ userRole }) => {
         address: ''
       });
     } catch (error) {
-      console.error('Failed to create customer:', error);
-      alert('Failed to create customer. Please try again.');
+      console.error('Failed to save customer:', error);
+      alert('Failed to save customer. Please try again.');
+    }
+  };
+
+  const handleEdit = (customer: Customer) => {
+    setFormData({
+      name: customer.name,
+      email: customer.email,
+      phone: customer.phone,
+      address: customer.address
+    });
+    setEditingId(customer.id);
+    setIsEditMode(true);
+    setIsModalOpen(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this customer?')) {
+      return;
+    }
+
+    try {
+      await import('../services/api').then(m => m.customers.delete(id));
+      setCustomers(customers.filter(c => c.id !== id));
+    } catch (error) {
+      console.error('Failed to delete customer:', error);
+      alert('Failed to delete customer. Please try again.');
     }
   };
 
@@ -238,10 +282,16 @@ const Customers: React.FC<CustomersProps> = ({ userRole }) => {
 
               {(userRole === 'admin' || userRole === 'manager') && (
                 <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button className="p-2 text-steel hover:text-primary hover:bg-white rounded-full transition-colors border border-transparent hover:border-steel-lighter">
+                  <button 
+                    onClick={() => handleEdit(customer)}
+                    className="p-2 text-steel hover:text-primary hover:bg-white rounded-full transition-colors border border-transparent hover:border-steel-lighter"
+                  >
                     <PenTool className="w-4 h-4" />
                   </button>
-                  <button className="p-2 text-steel hover:text-red-600 hover:bg-white rounded-full transition-colors border border-transparent hover:border-steel-lighter">
+                  <button 
+                    onClick={() => handleDelete(customer.id)}
+                    className="p-2 text-steel hover:text-red-600 hover:bg-white rounded-full transition-colors border border-transparent hover:border-steel-lighter"
+                  >
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
@@ -267,11 +317,21 @@ const Customers: React.FC<CustomersProps> = ({ userRole }) => {
           <div className="bg-surface w-full max-w-lg rounded-xl shadow-xl border border-steel-lighter">
             <div className="p-6 border-b border-steel-lighter flex justify-between items-center bg-slate-50/50">
               <div>
-                <h2 className="text-xl font-bold text-primary">New Customer</h2>
-                <p className="text-sm text-steel mt-1">Register a new client partner.</p>
+                <h2 className="text-xl font-bold text-primary">{isEditMode ? 'Edit Customer' : 'New Customer'}</h2>
+                <p className="text-sm text-steel mt-1">{isEditMode ? 'Update customer details.' : 'Register a new client partner.'}</p>
               </div>
               <button
-                onClick={() => setIsModalOpen(false)}
+                onClick={() => {
+                  setIsModalOpen(false);
+                  setIsEditMode(false);
+                  setEditingId(null);
+                  setFormData({
+                    name: '',
+                    email: '',
+                    phone: '',
+                    address: ''
+                  });
+                }}
                 className="text-steel hover:text-primary p-2 hover:bg-white rounded-full transition-colors"
               >
                 <X className="w-5 h-5" />
@@ -350,7 +410,17 @@ const Customers: React.FC<CustomersProps> = ({ userRole }) => {
               <div className="pt-4 flex items-center justify-end gap-3 border-t border-steel-lighter">
                 <button
                   type="button"
-                  onClick={() => setIsModalOpen(false)}
+                  onClick={() => {
+                    setIsModalOpen(false);
+                    setIsEditMode(false);
+                    setEditingId(null);
+                    setFormData({
+                      name: '',
+                      email: '',
+                      phone: '',
+                      address: ''
+                    });
+                  }}
                   className="px-4 py-2 text-sm font-medium text-steel hover:text-primary bg-white border border-steel-lighter rounded-lg hover:bg-slate-50 transition-colors"
                 >
                   Cancel
@@ -360,7 +430,7 @@ const Customers: React.FC<CustomersProps> = ({ userRole }) => {
                   className="px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary-hover rounded-lg shadow-sm flex items-center gap-2 transition-colors"
                 >
                   <Save className="w-4 h-4" />
-                  Save Customer
+                  {isEditMode ? 'Update Customer' : 'Save Customer'}
                 </button>
               </div>
             </form>
