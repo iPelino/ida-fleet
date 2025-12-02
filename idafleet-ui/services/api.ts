@@ -72,6 +72,13 @@ export const customers = {
         const response = await api.post('/customers/', customerData);
         return response.data;
     },
+    update: async (id: string, customerData: Partial<Customer>): Promise<Customer> => {
+        const response = await api.patch(`/customers/${id}/`, customerData);
+        return response.data;
+    },
+    delete: async (id: string): Promise<void> => {
+        await api.delete(`/customers/${id}/`);
+    },
 };
 
 export const trips = {
@@ -106,6 +113,25 @@ export const trips = {
             })) : [],
         };
     },
+    update: async (id: string, tripData: Partial<Trip>): Promise<Trip> => {
+        const response = await api.patch(`/trips/${id}/`, tripData);
+        const trip = response.data;
+        return {
+            ...trip,
+            id: String(trip.id),
+            vehicleId: String(trip.vehicle),
+            customerId: String(trip.customer),
+            totalPrice: Number(trip.totalPrice),
+            payments: trip.payments ? trip.payments.map((payment: any) => ({
+                ...payment,
+                id: String(payment.id),
+                amount: Number(payment.amount),
+            })) : [],
+        };
+    },
+    delete: async (id: string): Promise<void> => {
+        await api.delete(`/trips/${id}/`);
+    },
 };
 
 export const expenses = {
@@ -123,6 +149,13 @@ export const expenses = {
     create: async (expenseData: Partial<Expense>): Promise<Expense> => {
         const response = await api.post('/expenses/', expenseData);
         return response.data;
+    },
+    update: async (id: string, expenseData: Partial<Expense>): Promise<Expense> => {
+        const response = await api.patch(`/expenses/${id}/`, expenseData);
+        return response.data;
+    },
+    delete: async (id: string): Promise<void> => {
+        await api.delete(`/expenses/${id}/`);
     },
 };
 
