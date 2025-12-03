@@ -5,12 +5,12 @@
 
 set -e
 
-DOMAIN="ida.rw"
-EMAIL="pelmut2000@gmail.com"
-STAGING=1  # Set to 1 for testing, 0 for production
+DOMAIN="${DOMAIN_NAME:-ida.rw}"
+EMAIL="${LETSENCRYPT_EMAIL:-pelmut2000@gmail.com}"
+STAGING=0  # Set to 1 for testing, 0 for production
 
 # Export environment variables needed by docker-compose.prod.yml
-export GITHUB_REPOSITORY="ipelino/ida-fleet"
+export GITHUB_REPOSITORY="${GITHUB_REPOSITORY:-ipelino/ida-fleet}"
 
 echo "### Initializing SSL certificate setup for $DOMAIN ###"
 

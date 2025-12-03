@@ -3,7 +3,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 from apps.accounts.views import SignUpView, LoginView, UserView, RoleListView
-from apps.fleet.views import VehicleViewSet, ReminderViewSet
+from apps.fleet.views import VehicleViewSet, ReminderViewSet, reminder_system_health
 from apps.operations.views import CustomerViewSet, TripViewSet
 from apps.finance.views import ExpenseViewSet, PaymentViewSet, ExchangeRateViewSet
 
@@ -26,6 +26,7 @@ urlpatterns = [
     path('api/roles', RoleListView.as_view(), name='roles'),
     path('api/', include(router.urls)),
     path('api/support/', include('apps.support.urls')),
+    path('api/reminder-health', reminder_system_health, name='reminder-health'),
     # Swagger
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),

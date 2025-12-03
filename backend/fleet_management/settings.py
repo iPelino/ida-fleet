@@ -140,7 +140,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Africa/Kigali'
 
 USE_I18N = True
 
@@ -206,6 +206,55 @@ EMAIL_HOST_USER = os.environ.get('ZOHO_EMAIL_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('ZOHO_EMAIL_PASSWORD', '')
 DEFAULT_FROM_EMAIL = os.environ.get('ZOHO_EMAIL_USER', 'noreply@idaltd.com')
 SERVER_EMAIL = os.environ.get('ZOHO_EMAIL_USER', 'noreply@idaltd.com')
+
+# Reminder notification recipients (comma-separated emails)
+REMINDER_NOTIFICATION_RECIPIENTS = [
+    email.strip() 
+    for email in os.environ.get(
+        'REMINDER_NOTIFICATION_RECIPIENTS', 
+        os.environ.get('ZOHO_EMAIL_USER', '')
+    ).split(',')
+    if email.strip()
+]
+
+# Logging Configuration
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {asctime} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'apps.fleet.tasks': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'celery': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'django.core.mail': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}
 
 # Celery Configuration
 CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'redis://redis:6379/0')

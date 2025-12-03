@@ -15,9 +15,9 @@ app.autodiscover_tasks()
 
 # Scheduled tasks configuration
 app.conf.beat_schedule = {
-    'check-reminders-daily': {
+    'check-reminders-hourly': {  # Changed from daily to hourly for better reliability
         'task': 'apps.fleet.tasks.check_and_send_reminders',
-        'schedule': crontab(hour=8, minute=0),  # Run daily at 8:00 AM
+        'schedule': crontab(minute=0),  # Every hour on the hour
     },
     'mark-overdue-reminders': {
         'task': 'apps.fleet.tasks.mark_overdue_reminders',
