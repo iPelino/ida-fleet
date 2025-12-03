@@ -13,19 +13,22 @@ const Expenses: React.FC = () => {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [vehicles, setVehicles] = useState<any[]>([]);
   const [trips, setTrips] = useState<any[]>([]);
+  const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   React.useEffect(() => {
     const fetchData = async () => {
       try {
-        const [expensesData, vehiclesData, tripsData] = await Promise.all([
+        const [expensesData, vehiclesData, tripsData, categoriesData] = await Promise.all([
           import('../services/api').then(m => m.expenses.getAll()),
           import('../services/api').then(m => m.vehicles.getAll()),
-          import('../services/api').then(m => m.trips.getAll())
+          import('../services/api').then(m => m.trips.getAll()),
+          import('../services/api').then(m => m.expenseCategories.getAll())
         ]);
         setExpenses(expensesData);
         setVehicles(vehiclesData);
         setTrips(tripsData);
+        setCategories(categoriesData);
       } catch (error) {
         console.error('Failed to fetch data:', error);
       } finally {
@@ -147,7 +150,7 @@ const Expenses: React.FC = () => {
 
         setExpenses([newExpense, ...expenses]);
       }
-      
+
       setIsModalOpen(false);
       setIsEditMode(false);
       setEditingId(null);
@@ -294,11 +297,19 @@ const Expenses: React.FC = () => {
               onChange={(e) => setFilterCategory(e.target.value)}
             >
               <option value="All">All Categories</option>
-              <option value="Fuel">Fuel</option>
-              <option value="Maintenance">Maintenance</option>
-              <option value="Insurance">Insurance</option>
-              <option value="Tolls">Road Tolls</option>
-              <option value="Other">Other</option>
+              {categories.map(c => (
+                <option key={c.id} value={c.name}>{c.name}</option>
+              ))}
+              {/* Fallback for hardcoded if API fails or empty */}
+              {categories.length === 0 && (
+                <>
+                  <option value="Fuel">Fuel</option>
+                  <option value="Maintenance">Maintenance</option>
+                  <option value="Insurance">Insurance</option>
+                  <option value="Tolls">Road Tolls</option>
+                  <option value="Other">Other</option>
+                </>
+              )}
             </select>
           </div>
 
@@ -365,13 +376,13 @@ const Expenses: React.FC = () => {
                   )}
                 </div>
                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button 
+                  <button
                     onClick={() => handleEdit(expense)}
                     className="p-2 text-steel hover:text-primary hover:bg-blue-50 rounded-full transition-colors"
                   >
                     <PenTool className="w-4 h-4" />
                   </button>
-                  <button 
+                  <button
                     onClick={() => handleDelete(expense.id)}
                     className="p-2 text-steel hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
                   >
@@ -440,10 +451,17 @@ const Expenses: React.FC = () => {
                 <div className="space-y-1.5">
                   <label className="text-sm font-medium text-primary">Category</label>
                   <select name="category" className="w-full border border-steel-lighter rounded-lg px-3 py-2 text-sm" value={formData.category} onChange={handleInputChange}>
-                    <option value="Fuel">Fuel</option>
-                    <option value="Maintenance">Maintenance</option>
-                    <option value="Insurance">Insurance</option>
-                    <option value="Other">Other</option>
+                    {categories.map(c => (
+                      <option key={c.id} value={c.name}>{c.name}</option>
+                    ))}
+                    {categories.length === 0 && (
+                      <>
+                        <option value="Fuel">Fuel</option>
+                        <option value="Maintenance">Maintenance</option>
+                        <option value="Insurance">Insurance</option>
+                        <option value="Other">Other</option>
+                      </>
+                    )}
                   </select>
                 </div>
               </div>

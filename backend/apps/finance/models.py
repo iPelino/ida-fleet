@@ -62,6 +62,19 @@ class ExchangeRate(models.Model):
         return amount * rate
 
 
+
+class ExpenseCategory(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    description = models.TextField(blank=True, null=True)
+    createdAt = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name_plural = "Expense Categories"
+
+    def __str__(self):
+        return self.name
+
+
 class Payment(models.Model):
     trip = models.ForeignKey('operations.Trip', on_delete=models.CASCADE, related_name='payments')
     amount = models.DecimalField(max_digits=20, decimal_places=2)

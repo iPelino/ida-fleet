@@ -1,5 +1,10 @@
 from rest_framework import serializers
-from .models import Payment, Expense, ExchangeRate
+from .models import Payment, Expense, ExchangeRate, ExpenseCategory
+
+class ExpenseCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ExpenseCategory
+        fields = '__all__'
 
 class ExchangeRateSerializer(serializers.ModelSerializer):
     class Meta:

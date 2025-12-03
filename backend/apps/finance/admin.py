@@ -1,5 +1,10 @@
 from django.contrib import admin
-from .models import Payment, Expense, ExchangeRate
+from .models import Payment, Expense, ExchangeRate, ExpenseCategory
+
+@admin.register(ExpenseCategory)
+class ExpenseCategoryAdmin(admin.ModelAdmin):
+    list_display = ('name', 'description', 'createdAt')
+    search_fields = ('name',)
 
 @admin.register(ExchangeRate)
 class ExchangeRateAdmin(admin.ModelAdmin):

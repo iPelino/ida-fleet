@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useCurrency } from '../services/currencyContext';
-import { api, trips as tripsApi, expenses as expensesApi, vehicles as vehiclesApi } from '../services/api';
-import { Trip, Expense, Vehicle } from '../types';
+import api, { trips as tripsApi, expenses as expensesApi, vehicles as vehiclesApi, reminders as remindersApi } from '../services/api';
+import { Trip, Expense, Vehicle, Reminder } from '../types';
 import {
   AreaChart,
   Area,
@@ -49,19 +49,22 @@ const Dashboard: React.FC = () => {
   const [trips, setTrips] = useState<Trip[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [reminders, setReminders] = useState<Reminder[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [tripsData, expensesData, vehiclesData] = await Promise.all([
+        const [tripsData, expensesData, vehiclesData, remindersData] = await Promise.all([
           tripsApi.getAll(),
           expensesApi.getAll(),
-          vehiclesApi.getAll()
+          vehiclesApi.getAll(),
+          remindersApi.getAll()
         ]);
         setTrips(tripsData);
         setExpenses(expensesData);
         setVehicles(vehiclesData);
+        setReminders(remindersData);
       } catch (error) {
         console.error("Failed to fetch dashboard data:", error);
       } finally {
@@ -94,6 +97,7 @@ const Dashboard: React.FC = () => {
 
   const netProfit = totalIncome - totalExpenses;
   const activeVehicles = vehicles.filter(v => v.status === 'Active').length;
+  const overdueReminders = reminders.filter(r => r.status === 'Overdue');
 
   // --- Chart Data Mock (Scaling values to match currency) ---
   // In a real app, you would aggregate historical data properly. 
@@ -292,13 +296,24 @@ const Dashboard: React.FC = () => {
 
             <h4 className="text-xs font-bold uppercase tracking-wider text-steel mb-3">Attention Needed</h4>
             <div className="space-y-3">
-              <div className="flex items-center gap-3 p-3 bg-red-50 rounded-lg border border-red-100">
-                <AlertCircle className="w-5 h-5 text-red-500" />
-                <div>
-                  <p className="text-sm font-bold text-red-800">Maintenance Overdue</p>
-                  <p className="text-xs text-red-600">RAB 112A - Brake pads</p>
-                </div>
-              </div>
+              {overdueReminders.length > 0 ? (
+                overdueReminders.map(reminder => {
+                  const vehicle = vehicles.find(v => v.id === reminder.vehicleId);
+                  return (
+                    <div key={reminder.id} className="flex items-center gap-3 p-3 bg-red-50 rounded-lg border border-red-100">
+                      <AlertCircle className="w-5 h-5 text-red-500" />
+                      <div>
+                        <p className="text-sm font-bold text-red-800">{reminder.title}</p>
+                        <p className="text-xs text-red-600">
+                          {vehicle ? `${vehicle.licensePlate} - ` : ''}{reminder.type}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="text-sm text-steel italic">No immediate attention needed.</div>
+              )}
             </div>
           </div>
         </div>

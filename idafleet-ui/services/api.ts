@@ -139,8 +139,8 @@ export const expenses = {
         const response = await api.get('/expenses/');
         return response.data.map((item: any) => ({
             ...item,
-            vehicleId: item.vehicle, // Map backend 'vehicle' to frontend 'vehicleId'
-            tripId: item.trip,       // Map backend 'trip' to frontend 'tripId'
+            vehicleId: String(item.vehicle), // Map backend 'vehicle' to frontend 'vehicleId'
+            tripId: item.trip ? String(item.trip) : undefined,       // Map backend 'trip' to frontend 'tripId'
             amount: parseFloat(item.amount), // Ensure amount is a number
             currency: item.currency || 'USD', // Default currency if missing
             description: item.description || '', // Handle null description
@@ -156,6 +156,13 @@ export const expenses = {
     },
     delete: async (id: string): Promise<void> => {
         await api.delete(`/expenses/${id}/`);
+    },
+};
+
+export const expenseCategories = {
+    getAll: async (): Promise<{ id: number; name: string; description: string }[]> => {
+        const response = await api.get('/expense-categories/');
+        return response.data;
     },
 };
 

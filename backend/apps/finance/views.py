@@ -1,8 +1,12 @@
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from .models import Payment, Expense, ExchangeRate
-from .serializers import PaymentSerializer, ExpenseSerializer, ExchangeRateSerializer
+from .models import Payment, Expense, ExchangeRate, ExpenseCategory
+from .serializers import PaymentSerializer, ExpenseSerializer, ExchangeRateSerializer, ExpenseCategorySerializer
+
+class ExpenseCategoryViewSet(viewsets.ModelViewSet):
+    queryset = ExpenseCategory.objects.all()
+    serializer_class = ExpenseCategorySerializer
 
 class ExchangeRateViewSet(viewsets.ModelViewSet):
     queryset = ExchangeRate.objects.all()
