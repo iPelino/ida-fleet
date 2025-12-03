@@ -107,12 +107,13 @@ jobs:
               echo "SSL certificates not found. Running init-letsencrypt.sh..."
               chmod +x init-letsencrypt.sh
               ./init-letsencrypt.sh
+              echo "SSL initialization complete. Starting all services..."
+              docker compose -f docker-compose.prod.yml up -d --remove-orphans
+              docker compose -f docker-compose.prod.yml exec -T backend python manage.py migrate
             else
               echo "SSL certificates already exist. Skipping initialization."
               # Start all services
               docker compose -f docker-compose.prod.yml up -d --remove-orphans
               # Run migrations
               docker compose -f docker-compose.prod.yml exec -T backend python manage.py migrate
-              # Reload nginx to pick up any config changes
-              docker compose -f docker-compose.prod.yml exec nginx nginx -s reload || true
             fi

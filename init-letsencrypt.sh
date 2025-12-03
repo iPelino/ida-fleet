@@ -66,12 +66,9 @@ docker compose -f docker-compose.prod.yml run --rm --entrypoint "\
     -d $DOMAIN \
     -d www.$DOMAIN" certbot
 
-echo "### Reloading nginx ###"
-docker compose -f docker-compose.prod.yml exec nginx nginx -s reload
-
 echo ""
-echo "### SSL certificate successfully obtained! ###"
-echo "Your site should now be accessible at https://$DOMAIN"
+echo "### SSL certificate setup complete! ###"
+echo "Certificates are ready at /etc/letsencrypt/live/$DOMAIN"
 echo ""
 echo "The Certbot container will automatically renew certificates every 12 hours."
 echo "Certificates are valid for 90 days and will be renewed when they have 30 days or less remaining."
