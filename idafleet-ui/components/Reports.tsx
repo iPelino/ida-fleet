@@ -1,11 +1,11 @@
 
 import React, { useState, useMemo } from 'react';
 import {
-  convertToUSD,
   formatCurrency,
 } from '../services/mockData';
 import { ReportFilter, Trip, Expense, Vehicle, Customer } from '../types';
 import { trips as tripApi, expenses as expenseApi, vehicles as vehicleApi, customers as customerApi } from '../services/api';
+import { useCurrency } from '../services/currencyContext';
 
 import { Badge } from './ui/Badge';
 import {
@@ -35,6 +35,8 @@ import {
 } from 'lucide-react';
 
 const Reports: React.FC = () => {
+  const { convert } = useCurrency();
+
   const [filters, setFilters] = useState<ReportFilter>({
     dateRange: 'This Year',
     vehicleId: 'All',
@@ -95,11 +97,11 @@ const Reports: React.FC = () => {
 
   const totalIncome = filteredData.trips.reduce((sum, t) => {
     const paid = t.payments.reduce((pSum, p) => pSum + p.amount, 0);
-    return sum + convertToUSD(paid, t.currency);
+    return sum + convert(paid, t.currency, 'USD');
   }, 0);
 
   const totalExpenses = filteredData.expenses.reduce((sum, e) => {
-    return sum + convertToUSD(e.amount, e.currency);
+    return sum + convert(e.amount, e.currency, 'USD');
   }, 0);
 
   const netProfit = totalIncome - totalExpenses;
@@ -114,8 +116,8 @@ const Reports: React.FC = () => {
     const vTrips = filteredData.trips.filter(t => t.vehicleId === v.id);
     const vExpenses = filteredData.expenses.filter(e => e.vehicleId === v.id);
 
-    const income = vTrips.reduce((sum, t) => sum + convertToUSD(t.totalPrice, t.currency), 0);
-    const expense = vExpenses.reduce((sum, e) => sum + convertToUSD(e.amount, e.currency), 0);
+    const income = vTrips.reduce((sum, t) => sum + convert(t.totalPrice, t.currency, 'USD'), 0);
+    const expense = vExpenses.reduce((sum, e) => sum + convert(e.amount, e.currency, 'USD'), 0);
 
     return {
       name: v.licensePlate,
@@ -127,7 +129,7 @@ const Reports: React.FC = () => {
 
   // 2. Expense Breakdown
   const expenseBreakdown = filteredData.expenses.reduce((acc, curr) => {
-    const amount = convertToUSD(curr.amount, curr.currency);
+    const amount = convert(curr.amount, curr.currency, 'USD');
     acc[curr.category] = (acc[curr.category] || 0) + amount;
     return acc;
   }, {} as Record<string, number>);
@@ -156,7 +158,7 @@ const Reports: React.FC = () => {
       const date = new Date(t.startDate);
       if (!isNaN(date.getTime())) {
         const monthIndex = date.getMonth();
-        data[monthIndex].Income += convertToUSD(t.totalPrice, t.currency);
+        data[monthIndex].Income += convert(t.totalPrice, t.currency, 'USD');
       }
     });
 
@@ -164,7 +166,7 @@ const Reports: React.FC = () => {
       const date = new Date(e.date);
       if (!isNaN(date.getTime())) {
         const monthIndex = date.getMonth();
-        data[monthIndex].Expenses += convertToUSD(e.amount, e.currency);
+        data[monthIndex].Expenses += convert(e.amount, e.currency, 'USD');
       }
     });
 

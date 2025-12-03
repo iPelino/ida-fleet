@@ -217,4 +217,15 @@ export const reminders = {
     },
 };
 
+export const exchangeRates = {
+    getActive: async (): Promise<any[]> => {
+        const response = await api.get('/exchange-rates/active/');
+        return response.data;
+    },
+    getRatesMap: async (): Promise<Record<string, Record<string, number>>> => {
+        const response = await api.get('/exchange-rates/rates_map/');
+        return response.data;
+    },
+};
+
 export default api;

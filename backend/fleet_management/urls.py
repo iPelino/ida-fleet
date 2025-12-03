@@ -5,7 +5,7 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, Spec
 from apps.accounts.views import SignUpView, LoginView, UserView, RoleListView
 from apps.fleet.views import VehicleViewSet, ReminderViewSet
 from apps.operations.views import CustomerViewSet, TripViewSet
-from apps.finance.views import ExpenseViewSet, PaymentViewSet
+from apps.finance.views import ExpenseViewSet, PaymentViewSet, ExchangeRateViewSet
 
 router = DefaultRouter()
 router.register(r'vehicles', VehicleViewSet)
@@ -14,6 +14,7 @@ router.register(r'customers', CustomerViewSet)
 router.register(r'trips', TripViewSet)
 router.register(r'expenses', ExpenseViewSet)
 router.register(r'payments', PaymentViewSet)
+router.register(r'exchange-rates', ExchangeRateViewSet)
 from apps.accounts.views import UserViewSet
 router.register(r'users', UserViewSet)
 

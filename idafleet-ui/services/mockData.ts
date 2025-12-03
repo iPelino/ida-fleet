@@ -118,7 +118,7 @@ export const MOCK_TRIPS: Trip[] = [
     endLocation: 'Kigali',
     tripType: 'local',
     totalPrice: 2340.00,
-    currency: 'USD', 
+    currency: 'USD',
     status: 'Pending',
     payments: [],
   },
@@ -250,32 +250,27 @@ export const MOCK_REMINDERS: Reminder[] = [
   }
 ];
 
-// Helper to convert RWF to USD (Fixed rate for demo: 1300)
-export const convertToUSD = (amount: number, currency: string): number => {
-  if (currency === 'USD') return amount;
-  if (currency === 'RWF') return amount / 1300;
-  if (currency === 'EUR') return amount * 1.1;
-  return amount;
-};
+// NOTE: Currency conversion is now handled by currencyContext.tsx
+// which fetches rates from the backend. This mockData file should
+// not contain conversion logic.
 
 export const getKPIs = (): KPIData => {
-  // Calculate Income
+  // NOTE: These calculations use hardcoded values from MOCK_TRIPS/MOCK_EXPENSES
+  // In production, the backend should provide converted amounts
+  // For now, we return raw amounts and let components handle conversion
+
   const totalIncome = MOCK_TRIPS.reduce((acc, trip) => {
     const paidAmount = trip.payments.reduce((sum, p) => sum + p.amount, 0);
-    return acc + convertToUSD(paidAmount, trip.currency);
+    return acc + paidAmount; // No conversion - handled in components
   }, 0);
 
-  // Calculate Expenses
   const totalExpenses = MOCK_EXPENSES.reduce((acc, exp) => {
-    return acc + convertToUSD(exp.amount, exp.currency);
+    return acc + exp.amount; // No conversion - handled in components
   }, 0);
 
-  // Pending Payments
   const pendingPayments = MOCK_TRIPS.reduce((acc, trip) => {
     const paidAmount = trip.payments.reduce((sum, p) => sum + p.amount, 0);
-    const total = convertToUSD(trip.totalPrice, trip.currency);
-    const paid = convertToUSD(paidAmount, trip.currency);
-    return acc + (total - paid);
+    return acc + (trip.totalPrice - paidAmount);
   }, 0);
 
   const activeVehicles = MOCK_VEHICLES.filter(v => v.status === 'Active').length;
