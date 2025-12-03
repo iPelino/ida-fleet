@@ -35,6 +35,13 @@ CSRF_TRUSTED_ORIGINS = ['http://localhost:8000', 'http://127.0.0.1:8000']
 if DOMAIN_NAME:
     CSRF_TRUSTED_ORIGINS.append(f'https://{DOMAIN_NAME}')
     CSRF_TRUSTED_ORIGINS.append(f'http://{DOMAIN_NAME}')
+    CSRF_TRUSTED_ORIGINS.append(f'https://www.{DOMAIN_NAME}')
+    CSRF_TRUSTED_ORIGINS.append(f'http://www.{DOMAIN_NAME}')
+
+# HTTPS/SSL Settings
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
 
 
 # Application definition
