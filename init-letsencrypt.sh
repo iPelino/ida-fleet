@@ -61,6 +61,8 @@ docker compose -f docker-compose.prod.yml run --rm --entrypoint "\
     --email $EMAIL \
     --agree-tos \
     --no-eff-email \
+    --non-interactive \
+    --keep-until-expiring \
     -d $DOMAIN \
     -d www.$DOMAIN" certbot
 
