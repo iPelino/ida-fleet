@@ -442,6 +442,14 @@ const Settings: React.FC<SettingsProps> = ({ userRole }) => {
                           <Badge variant="brand" className="pl-1 pr-2">
                             <Shield className="w-3 h-3 mr-1" /> Admin
                           </Badge>
+                        ) : user.role === 'manager' ? (
+                          <Badge variant="info" className="pl-1 pr-2">
+                            <Users className="w-3 h-3 mr-1" /> Manager
+                          </Badge>
+                        ) : user.role === 'driver' ? (
+                          <Badge variant="warning" className="pl-1 pr-2">
+                            <Users className="w-3 h-3 mr-1" /> Driver
+                          </Badge>
                         ) : (
                           <Badge variant="outline" className="pl-1 pr-2">
                             <Users className="w-3 h-3 mr-1" /> Employee
