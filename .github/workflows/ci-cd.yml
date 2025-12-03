@@ -114,7 +114,7 @@ jobs:
             
             # Debug: List certificates
             echo "Listing certificates:"
-            docker compose -f docker-compose.prod.yml run --rm --entrypoint "ls -la /etc/letsencrypt/live/" certbot || true
+            docker compose -f docker-compose.prod.yml run --rm --no-deps --entrypoint "ls -la /etc/letsencrypt/live/" certbot || true
             
             # Restart nginx to ensure it picks up new certs
             docker compose -f docker-compose.prod.yml restart nginx

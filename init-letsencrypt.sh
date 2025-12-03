@@ -16,11 +16,12 @@ echo "### Initializing SSL certificate setup for $DOMAIN ###"
 
 # Check if certificate exists and is valid (not dummy)
 # We must check INSIDE the container because certbot_etc is a named volume
-if docker compose -f docker-compose.prod.yml run --rm --entrypoint "test -d /etc/letsencrypt/live/$DOMAIN" certbot; then
+# Use --no-deps to avoid starting nginx (which might be broken)
+if docker compose -f docker-compose.prod.yml run --rm --no-deps --entrypoint "test -d /etc/letsencrypt/live/$DOMAIN" certbot; then
   echo "Checking existing certificate for $DOMAIN..."
   
   # Check if it's a dummy certificate (Issuer contains "localhost")
-  IS_DUMMY=$(docker compose -f docker-compose.prod.yml run --rm --entrypoint "\
+  IS_DUMMY=$(docker compose -f docker-compose.prod.yml run --rm --no-deps --entrypoint "\
     openssl x509 -in /etc/letsencrypt/live/$DOMAIN/fullchain.pem -noout -issuer" certbot | grep "localhost" || true)
 
   if [ -z "$IS_DUMMY" ]; then
@@ -35,7 +36,7 @@ fi
 
 # Clean up any broken or dummy states
 echo "### Cleaning up existing/broken certificates ###"
-docker compose -f docker-compose.prod.yml run --rm --entrypoint "\
+docker compose -f docker-compose.prod.yml run --rm --no-deps --entrypoint "\
   rm -Rf /etc/letsencrypt/live/$DOMAIN && \
   rm -Rf /etc/letsencrypt/archive/$DOMAIN && \
   rm -Rf /etc/letsencrypt/renewal/$DOMAIN.conf && \
@@ -44,18 +45,18 @@ docker compose -f docker-compose.prod.yml run --rm --entrypoint "\
   rm -Rf /etc/letsencrypt/renewal/$DOMAIN-0001.conf" certbot
 
 echo "### Creating directory structure for dummy certificate ###"
-docker compose -f docker-compose.prod.yml run --rm --entrypoint "\
+docker compose -f docker-compose.prod.yml run --rm --no-deps --entrypoint "\
   mkdir -p /etc/letsencrypt/live/$DOMAIN" certbot
 
 echo "### Creating dummy certificate for $DOMAIN ###"
-docker compose -f docker-compose.prod.yml run --rm --entrypoint "\
+docker compose -f docker-compose.prod.yml run --rm --no-deps --entrypoint "\
   openssl req -x509 -nodes -newkey rsa:2048 -days 1 \
     -keyout '/etc/letsencrypt/live/$DOMAIN/privkey.pem' \
     -out '/etc/letsencrypt/live/$DOMAIN/fullchain.pem' \
     -subj '/CN=localhost'" certbot
 
 echo "### Creating dummy chain.pem for SSL stapling ###"
-docker compose -f docker-compose.prod.yml run --rm --entrypoint "\
+docker compose -f docker-compose.prod.yml run --rm --no-deps --entrypoint "\
   cp /etc/letsencrypt/live/$DOMAIN/fullchain.pem /etc/letsencrypt/live/$DOMAIN/chain.pem" certbot
 
 echo "### Starting nginx ###"
@@ -65,7 +66,7 @@ echo "### Waiting for nginx to start ###"
 sleep 5
 
 echo "### Deleting dummy certificate ###"
-docker compose -f docker-compose.prod.yml run --rm --entrypoint "\
+docker compose -f docker-compose.prod.yml run --rm --no-deps --entrypoint "\
   rm -Rf /etc/letsencrypt/live/$DOMAIN && \
   rm -Rf /etc/letsencrypt/archive/$DOMAIN && \
   rm -Rf /etc/letsencrypt/renewal/$DOMAIN.conf" certbot
@@ -78,7 +79,10 @@ else
   STAGING_ARG=""
 fi
 
-docker compose -f docker-compose.prod.yml run --rm --entrypoint "\
+# For the actual cert request, we DO need nginx running (webroot mode), 
+# but we don't need docker to try to start it again as a dependency, 
+# so --no-deps is still safer as we manually started nginx above.
+docker compose -f docker-compose.prod.yml run --rm --no-deps --entrypoint "\
   certbot certonly --webroot -w /var/www/certbot \
     $STAGING_ARG \
     --email $EMAIL \
