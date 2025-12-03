@@ -416,7 +416,9 @@ const Reports: React.FC = () => {
               <p className="text-xl font-bold text-secondary">
                 {formatCurrency(outstandingTrips.reduce((sum, t) => {
                   const paid = t.payments.reduce((p, c) => p + c.amount, 0);
-                  return sum + (t.totalPrice - paid);
+                  const balance = t.totalPrice - paid;
+                  // Convert each trip's balance to USD before summing
+                  return sum + convert(balance, t.currency, 'USD');
                 }, 0))}
               </p>
             </div>
