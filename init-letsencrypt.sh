@@ -15,7 +15,8 @@ export GITHUB_REPOSITORY="${GITHUB_REPOSITORY:-ipelino/ida-fleet}"
 echo "### Initializing SSL certificate setup for $DOMAIN ###"
 
 # Check if certificate exists and is valid (not dummy)
-if [ -d "./certbot_etc/live/$DOMAIN" ]; then
+# We must check INSIDE the container because certbot_etc is a named volume
+if docker compose -f docker-compose.prod.yml run --rm --entrypoint "test -d /etc/letsencrypt/live/$DOMAIN" certbot; then
   echo "Checking existing certificate for $DOMAIN..."
   
   # Check if it's a dummy certificate (Issuer contains "localhost")
@@ -28,6 +29,8 @@ if [ -d "./certbot_etc/live/$DOMAIN" ]; then
   else
     echo "Found dummy certificate (Issuer: localhost). Cleaning up to request real certificate..."
   fi
+else
+  echo "No existing certificate found for $DOMAIN."
 fi
 
 # Clean up any broken or dummy states
