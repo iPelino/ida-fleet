@@ -9,6 +9,9 @@ DOMAIN="ida.rw"
 EMAIL="pelmut2000@gmail.com"
 STAGING=1  # Set to 1 for testing, 0 for production
 
+# Export environment variables needed by docker-compose.prod.yml
+export GITHUB_REPOSITORY="ipelino/ida-fleet"
+
 echo "### Initializing SSL certificate setup for $DOMAIN ###"
 
 # Check if certificate already exists
