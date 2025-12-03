@@ -14,11 +14,31 @@ export GITHUB_REPOSITORY="${GITHUB_REPOSITORY:-ipelino/ida-fleet}"
 
 echo "### Initializing SSL certificate setup for $DOMAIN ###"
 
-# Check if certificate already exists
+# Check if certificate exists and is valid (not dummy)
 if [ -d "./certbot_etc/live/$DOMAIN" ]; then
-  echo "Certificate for $DOMAIN already exists. Skipping initialization."
-  exit 0
+  echo "Checking existing certificate for $DOMAIN..."
+  
+  # Check if it's a dummy certificate (Issuer contains "localhost")
+  IS_DUMMY=$(docker compose -f docker-compose.prod.yml run --rm --entrypoint "\
+    openssl x509 -in /etc/letsencrypt/live/$DOMAIN/fullchain.pem -noout -issuer" certbot | grep "localhost" || true)
+
+  if [ -z "$IS_DUMMY" ]; then
+    echo "Valid certificate for $DOMAIN already exists. Skipping initialization."
+    exit 0
+  else
+    echo "Found dummy certificate (Issuer: localhost). Cleaning up to request real certificate..."
+  fi
 fi
+
+# Clean up any broken or dummy states
+echo "### Cleaning up existing/broken certificates ###"
+docker compose -f docker-compose.prod.yml run --rm --entrypoint "\
+  rm -Rf /etc/letsencrypt/live/$DOMAIN && \
+  rm -Rf /etc/letsencrypt/archive/$DOMAIN && \
+  rm -Rf /etc/letsencrypt/renewal/$DOMAIN.conf && \
+  rm -Rf /etc/letsencrypt/live/$DOMAIN-0001 && \
+  rm -Rf /etc/letsencrypt/archive/$DOMAIN-0001 && \
+  rm -Rf /etc/letsencrypt/renewal/$DOMAIN-0001.conf" certbot
 
 echo "### Creating directory structure for dummy certificate ###"
 docker compose -f docker-compose.prod.yml run --rm --entrypoint "\

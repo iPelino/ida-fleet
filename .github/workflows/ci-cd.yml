@@ -102,18 +102,13 @@ jobs:
             # Pull latest images
             docker compose -f docker-compose.prod.yml pull
             
-            # Check if SSL certificates exist
-            if [ ! -d "certbot_etc/live/${{ secrets.DOMAIN_NAME }}" ]; then
-              echo "SSL certificates not found. Running init-letsencrypt.sh..."
-              chmod +x init-letsencrypt.sh
-              ./init-letsencrypt.sh
-              echo "SSL initialization complete. Starting all services..."
-              docker compose -f docker-compose.prod.yml up -d --remove-orphans
-              docker compose -f docker-compose.prod.yml exec -T backend python manage.py migrate
-            else
-              echo "SSL certificates already exist. Skipping initialization."
-              # Start all services
-              docker compose -f docker-compose.prod.yml up -d --remove-orphans
-              # Run migrations
-              docker compose -f docker-compose.prod.yml exec -T backend python manage.py migrate
-            fi
+            # Run SSL initialization (script handles existence checks)
+            echo "Running SSL initialization check..."
+            chmod +x init-letsencrypt.sh
+            ./init-letsencrypt.sh
+            
+            # Start/Restart services
+            echo "Starting all services..."
+            docker compose -f docker-compose.prod.yml up -d --remove-orphans
+            docker compose -f docker-compose.prod.yml exec -T backend python manage.py migrate
+            docker compose -f docker-compose.prod.yml exec nginx nginx -s reload || true
