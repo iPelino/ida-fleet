@@ -25,6 +25,7 @@ const Expenses: React.FC = () => {
           import('../services/api').then(m => m.trips.getAll()),
           import('../services/api').then(m => m.expenseCategories.getAll())
         ]);
+        console.log('Fetched categories:', categoriesData);
         setExpenses(expensesData);
         setVehicles(vehiclesData);
         setTrips(tripsData);
@@ -463,6 +464,18 @@ const Expenses: React.FC = () => {
                       </>
                     )}
                   </select>
+                </div>
+
+                {/* Description */}
+                <div className="space-y-1.5 md:col-span-2">
+                  <label className="text-sm font-medium text-primary">Description (Optional)</label>
+                  <textarea
+                    name="description"
+                    className="w-full border border-steel-lighter rounded-lg px-3 py-2 text-sm h-20 resize-none"
+                    placeholder="Add details about this expense..."
+                    value={formData.description}
+                    onChange={handleInputChange}
+                  />
                 </div>
               </div>
               <div className="pt-4 flex justify-end gap-2">
