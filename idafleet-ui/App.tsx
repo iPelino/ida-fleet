@@ -94,11 +94,11 @@ const AppContent: React.FC = () => {
     { id: 'fleet', label: 'Fleet', icon: Truck },
     { id: 'trips', label: 'Track Shipments', icon: MapPin },
     { id: 'expenses', label: 'Expenses', icon: Receipt },
-    { id: 'loans', label: 'Loans', icon: CreditCard },
     { id: 'customers', label: 'Customers', icon: Users },
   ];
 
   if ((userRole === 'admin' || userRole === 'manager')) {
+    navigation.push({ id: 'loans', label: 'Loans', icon: CreditCard });
     navigation.push({ id: 'reports', label: 'Reports', icon: BarChart3 });
   }
 
@@ -108,7 +108,7 @@ const AppContent: React.FC = () => {
       case 'fleet': return <Fleet />;
       case 'trips': return <Trips />;
       case 'expenses': return <Expenses />;
-      case 'loans': return <LoansPage />;
+      case 'loans': return (userRole === 'admin' || userRole === 'manager') ? <LoansPage /> : <div className="p-8 text-center text-red-500">Access Denied</div>;
       case 'customers': return <Customers userRole={userRole} />;
       case 'reports': return (userRole === 'admin' || userRole === 'manager') ? <Reports /> : <div className="p-8 text-center text-red-500">Access Denied</div>;
       case 'settings': return <Settings userRole={userRole} />;
