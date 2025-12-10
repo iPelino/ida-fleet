@@ -113,12 +113,20 @@ const Dashboard: React.FC = () => {
     { name: 'Jan', income: 6390 * rate, expense: 3800 * rate },
   ];
 
-  const expenseCategoryData = [
-    { name: 'Fuel', value: 400 },
-    { name: 'Maintenance', value: 300 },
-    { name: 'Insurance', value: 300 },
-    { name: 'Tolls', value: 100 },
-  ];
+  // --- Expense Breakdown Aggregation ---
+  const expenseCategoryData = React.useMemo(() => {
+    const aggregation: { [key: string]: number } = {};
+
+    expenses.forEach(exp => {
+      const cat = exp.category || 'Other';
+      const amount = convert(exp.amount, exp.currency);
+      aggregation[cat] = (aggregation[cat] || 0) + amount;
+    });
+
+    return Object.entries(aggregation)
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value); // Sort by value descending
+  }, [expenses, convert]);
 
   const COLORS = ['#1E3A8A', '#F97316', '#64748B', '#3b82f6'];
 
@@ -240,7 +248,7 @@ const Dashboard: React.FC = () => {
                   <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[idx % COLORS.length] }}></div>
                   <span className="text-steel">{item.name}</span>
                 </div>
-                <span className="font-bold text-primary">{item.value} units</span>
+                <span className="font-bold text-primary">{format(item.value)}</span>
               </div>
             ))}
           </div>

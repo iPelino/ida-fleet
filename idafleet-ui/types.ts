@@ -107,3 +107,67 @@ export interface ReportFilter {
   vehicleId: string;
   customerId: string;
 }
+
+export type BankLoanStatus = 'Pending' | 'Active' | 'Paid Off' | 'Defaulted';
+export type LoanPaymentMethod = 'Bank Transfer' | 'MoMo' | 'Cash' | 'Trip Revenue';
+
+export interface BankLoan {
+  id: string;
+  bank_name: string;
+  amount: number;
+  currency: string;
+  payment_period_months: number;
+  start_date: string;
+  end_date: string;
+  status: BankLoanStatus;
+  remaining_amount: number;
+  notes?: string;
+}
+
+export interface PersonalLoan {
+  id: string;
+  creditor_name: string;
+  amount: number;
+  currency: string;
+  date_taken: string;
+  payment_due_date: string;
+  status: 'Pending' | 'Active' | 'Paid Off';
+  remaining_balance: number;
+  notes?: string;
+}
+
+export interface AdvancePayment {
+  id: string;
+  recipient_name: string;
+  amount: number;
+  currency: string;
+  date_issued: string;
+  reason: string;
+  status: 'Pending' | 'Partial' | 'Paid';
+  remaining_amount: number;
+}
+
+export interface UnpaidFuel {
+  id: string;
+  supplier: string;
+  liters: number;
+  price_per_liter: number;
+  total_amount: number;
+  currency: string;
+  date: string;
+  status: 'Pending' | 'Partial' | 'Paid';
+  remaining_balance: number;
+}
+
+export interface LoanPayment {
+  id: string;
+  amount: number;
+  currency: string;
+  date: string;
+  method: LoanPaymentMethod;
+  reference_number?: string;
+  bank_loan?: string | number;
+  personal_loan?: string | number;
+  advance_payment?: string | number;
+  unpaid_fuel?: string | number;
+}

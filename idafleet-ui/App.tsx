@@ -8,6 +8,7 @@ import Expenses from './components/Expenses';
 import Customers from './components/Customers';
 import Reports from './components/Reports';
 import Settings from './components/Settings';
+import LoansPage from './components/loans/LoansPage';
 import Login from './components/Login';
 import FeedbackWidget from './components/FeedbackWidget';
 import Logo from './components/Logo';
@@ -18,6 +19,7 @@ import {
   Receipt,
   Users,
   BarChart3,
+  CreditCard,
   Bell,
   Menu,
   LogOut,
@@ -28,7 +30,7 @@ import { CURRENT_USER } from './services/mockData';
 import { CurrencyProvider, useCurrency } from './services/currencyContext';
 import { Currency, User, Role } from './types';
 
-type View = 'dashboard' | 'fleet' | 'trips' | 'expenses' | 'customers' | 'reports' | 'settings';
+type View = 'dashboard' | 'fleet' | 'trips' | 'expenses' | 'customers' | 'reports' | 'settings' | 'loans';
 
 // Internal component to access Context inside Provider
 const AppContent: React.FC = () => {
@@ -92,6 +94,7 @@ const AppContent: React.FC = () => {
     { id: 'fleet', label: 'Fleet', icon: Truck },
     { id: 'trips', label: 'Track Shipments', icon: MapPin },
     { id: 'expenses', label: 'Expenses', icon: Receipt },
+    { id: 'loans', label: 'Loans', icon: CreditCard },
     { id: 'customers', label: 'Customers', icon: Users },
   ];
 
@@ -105,6 +108,7 @@ const AppContent: React.FC = () => {
       case 'fleet': return <Fleet />;
       case 'trips': return <Trips />;
       case 'expenses': return <Expenses />;
+      case 'loans': return <LoansPage />;
       case 'customers': return <Customers userRole={userRole} />;
       case 'reports': return (userRole === 'admin' || userRole === 'manager') ? <Reports /> : <div className="p-8 text-center text-red-500">Access Denied</div>;
       case 'settings': return <Settings userRole={userRole} />;

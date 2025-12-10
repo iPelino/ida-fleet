@@ -26,6 +26,7 @@ urlpatterns = [
     path('api/user', UserView.as_view(), name='user'),
     path('api/roles', RoleListView.as_view(), name='roles'),
     path('api/', include(router.urls)),
+    path('api/loans/', include('apps.loans.urls')),
     path('api/support/', include('apps.support.urls')),
     path('api/reminder-health', reminder_system_health, name='reminder-health'),
     # Swagger
