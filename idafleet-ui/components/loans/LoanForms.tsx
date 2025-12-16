@@ -2,8 +2,9 @@ import React, { useState, useRef, useEffect } from 'react';
 import { loansService } from '../../services/loans';
 import { Search, ChevronDown, Check } from 'lucide-react';
 
-// List of banks operating in Rwanda
+// List of banks and financial institutions operating in Rwanda
 const RWANDAN_BANKS = [
+    // Commercial Banks
     'Bank of Kigali',
     'I&M Bank Rwanda',
     'Equity Bank Rwanda',
@@ -15,11 +16,24 @@ const RWANDAN_BANKS = [
     'NCBA Bank Rwanda',
     'KCB Bank Rwanda',
     'Bank of Africa Rwanda',
-    'Urwego Bank',
     'AB Bank Rwanda',
-    'Zigama CSS',
+    // Development & Specialized Banks
     'Development Bank of Rwanda (BRD)',
     'National Bank of Rwanda (BNR)',
+    // Microfinance Banks
+    'Urwego Bank',
+    'Zigama CSS',
+    // SACCOs & Microfinance Institutions
+    'Inyamazererano (Amazerano)',
+    'Umutanguha Finance',
+    'Duterimbere IMF',
+    'Vision Fund Rwanda',
+    'Goshen Finance',
+    'Inkunga Finance',
+    'RIM Ltd',
+    'Unguka Bank',
+    'COOPEDU',
+    'Amasezerano Community Banking',
 ] as const;
 
 interface SearchableSelectProps {
