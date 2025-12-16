@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useCurrency } from '../services/currencyContext';
 import api, { trips as tripsApi, expenses as expensesApi, vehicles as vehiclesApi, reminders as remindersApi } from '../services/api';
-import { Trip, Expense, Vehicle, Reminder } from '../types';
+import { loansService } from '../services/loans';
+import { Trip, Expense, Vehicle, Reminder, BankLoan, PersonalLoan, AdvancePayment, UnpaidFuel } from '../types';
 import {
   AreaChart,
   Area,
@@ -14,7 +15,7 @@ import {
   Pie,
   Cell
 } from 'recharts';
-import { TrendingUp, TrendingDown, DollarSign, Wallet, Truck, AlertCircle } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, Wallet, Truck, AlertCircle, CreditCard } from 'lucide-react';
 import { Badge } from './ui/Badge';
 
 // Moved KPICard definition to top to avoid hoisting issues
@@ -50,6 +51,10 @@ const Dashboard: React.FC = () => {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [reminders, setReminders] = useState<Reminder[]>([]);
+  const [bankLoans, setBankLoans] = useState<BankLoan[]>([]);
+  const [personalLoans, setPersonalLoans] = useState<PersonalLoan[]>([]);
+  const [advancePayments, setAdvancePayments] = useState<AdvancePayment[]>([]);
+  const [unpaidFuel, setUnpaidFuel] = useState<UnpaidFuel[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -65,6 +70,23 @@ const Dashboard: React.FC = () => {
         setExpenses(expensesData);
         setVehicles(vehiclesData);
         setReminders(remindersData);
+
+        // Fetch loans data (silently fail if unauthorized - non-admin users)
+        try {
+          const [bank, personal, advance, fuel] = await Promise.all([
+            loansService.getBankLoans(),
+            loansService.getPersonalLoans(),
+            loansService.getAdvancePayments(),
+            loansService.getUnpaidFuel()
+          ]);
+          setBankLoans(bank);
+          setPersonalLoans(personal);
+          setAdvancePayments(advance);
+          setUnpaidFuel(fuel);
+        } catch (loanError) {
+          // Non-admin users won't have access to loans - that's OK
+          console.log('Loans data not available (may require admin access)');
+        }
       } catch (error) {
         console.error("Failed to fetch dashboard data:", error);
       } finally {
@@ -98,6 +120,21 @@ const Dashboard: React.FC = () => {
   const netProfit = totalIncome - totalExpenses;
   const activeVehicles = vehicles.filter(v => v.status === 'Active').length;
   const overdueReminders = reminders.filter(r => r.status === 'Overdue');
+
+  // 4. Total Outstanding Loans (all loan types combined)
+  const totalLoansOutstanding = React.useMemo(() => {
+    const bankTotal = bankLoans.reduce((acc, loan) =>
+      acc + convert(loan.remaining_amount || 0, loan.currency as any), 0);
+    const personalTotal = personalLoans.reduce((acc, loan) =>
+      acc + convert(loan.remaining_balance || 0, loan.currency as any), 0);
+    const advanceTotal = advancePayments.reduce((acc, adv) =>
+      acc + convert(adv.remaining_amount || 0, adv.currency as any), 0);
+    const fuelTotal = unpaidFuel.reduce((acc, fuel) =>
+      acc + convert(fuel.remaining_balance || 0, fuel.currency as any), 0);
+    return bankTotal + personalTotal + advanceTotal + fuelTotal;
+  }, [bankLoans, personalLoans, advancePayments, unpaidFuel, convert]);
+
+  const totalLoansCount = bankLoans.length + personalLoans.length + advancePayments.length + unpaidFuel.length;
 
   // --- Chart Data Mock (Scaling values to match currency) ---
   // In a real app, you would aggregate historical data properly. 
@@ -150,7 +187,7 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <KPICard
           title="Total Income"
           amount={format(totalIncome)}
@@ -179,6 +216,15 @@ const Dashboard: React.FC = () => {
           trend="Action needed"
           trendColor="text-secondary"
         />
+        {totalLoansCount > 0 && (
+          <KPICard
+            title="Loans Outstanding"
+            amount={format(totalLoansOutstanding)}
+            icon={<CreditCard className="text-red-500 w-5 h-5" />}
+            trend={`${totalLoansCount} active loan${totalLoansCount !== 1 ? 's' : ''}`}
+            trendColor="text-red-500"
+          />
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

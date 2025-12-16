@@ -31,6 +31,13 @@ export const loansService = {
         const response = await axios.post<BankLoan>(`${API_URL}/loans/bank-loans/`, data, getHeaders());
         return response.data;
     },
+    updateBankLoan: async (id: number, data: Partial<BankLoan>) => {
+        const response = await axios.patch<BankLoan>(`${API_URL}/loans/bank-loans/${id}/`, data, getHeaders());
+        return response.data;
+    },
+    deleteBankLoan: async (id: number) => {
+        await axios.delete(`${API_URL}/loans/bank-loans/${id}/`, getHeaders());
+    },
 
     // Personal Loans
     getPersonalLoans: async () => {
@@ -40,6 +47,13 @@ export const loansService = {
     createPersonalLoan: async (data: Omit<PersonalLoan, 'id' | 'remaining_balance' | 'status'>) => {
         const response = await axios.post<PersonalLoan>(`${API_URL}/loans/personal-loans/`, data, getHeaders());
         return response.data;
+    },
+    updatePersonalLoan: async (id: number, data: Partial<PersonalLoan>) => {
+        const response = await axios.patch<PersonalLoan>(`${API_URL}/loans/personal-loans/${id}/`, data, getHeaders());
+        return response.data;
+    },
+    deletePersonalLoan: async (id: number) => {
+        await axios.delete(`${API_URL}/loans/personal-loans/${id}/`, getHeaders());
     },
 
     // Advance Payments
@@ -51,6 +65,13 @@ export const loansService = {
         const response = await axios.post<AdvancePayment>(`${API_URL}/loans/advance-payments/`, data, getHeaders());
         return response.data;
     },
+    updateAdvancePayment: async (id: number, data: Partial<AdvancePayment>) => {
+        const response = await axios.patch<AdvancePayment>(`${API_URL}/loans/advance-payments/${id}/`, data, getHeaders());
+        return response.data;
+    },
+    deleteAdvancePayment: async (id: number) => {
+        await axios.delete(`${API_URL}/loans/advance-payments/${id}/`, getHeaders());
+    },
 
     // Unpaid Fuel
     getUnpaidFuel: async () => {
@@ -60,6 +81,13 @@ export const loansService = {
     createUnpaidFuel: async (data: Omit<UnpaidFuel, 'id' | 'remaining_balance' | 'total_amount' | 'status'>) => {
         const response = await axios.post<UnpaidFuel>(`${API_URL}/loans/unpaid-fuel/`, data, getHeaders());
         return response.data;
+    },
+    updateUnpaidFuel: async (id: number, data: Partial<UnpaidFuel>) => {
+        const response = await axios.patch<UnpaidFuel>(`${API_URL}/loans/unpaid-fuel/${id}/`, data, getHeaders());
+        return response.data;
+    },
+    deleteUnpaidFuel: async (id: number) => {
+        await axios.delete(`${API_URL}/loans/unpaid-fuel/${id}/`, getHeaders());
     },
 
     // Payments

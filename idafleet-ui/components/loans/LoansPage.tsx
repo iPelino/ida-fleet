@@ -7,35 +7,174 @@ import {
 } from '../../types';
 import { loansService } from '../../services/loans';
 import { BankLoanForm, PersonalLoanForm, AdvancePaymentForm, UnpaidFuelForm } from './LoanForms';
+import { Pencil, Trash2, AlertTriangle } from 'lucide-react';
+import { useCurrency } from '../../services/currencyContext';
 
-// Placeholder components for lists (will be implemented next)
-const BankLoanList = ({ data }: { data: BankLoan[] }) => (
-    <div>
-        <h3 className="text-lg font-semibold mb-2">Bank Loans</h3>
-        <ul>{data.map(l => <li key={l.id}>{l.bank_name}: {l.remaining_amount} {l.currency}</li>)}</ul>
-    </div>
-);
+interface LoanListProps<T> {
+    data: T[];
+    onEdit: (item: T) => void;
+    onDelete: (id: number) => void;
+}
 
-const PersonalLoanList = ({ data }: { data: PersonalLoan[] }) => (
-    <div>
-        <h3 className="text-lg font-semibold mb-2">Personal Loans</h3>
-        <ul>{data.map(l => <li key={l.id}>{l.creditor_name}: {l.remaining_balance} {l.currency}</li>)}</ul>
-    </div>
-);
+const BankLoanList: React.FC<LoanListProps<BankLoan>> = ({ data, onEdit, onDelete }) => {
+    const { format, convert, displayCurrency } = useCurrency();
+    if (data.length === 0) return <div className="text-gray-500 text-center py-8">No bank loans recorded.</div>;
+    return (
+        <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+                <thead className="bg-gray-50 text-left">
+                    <tr>
+                        <th className="px-4 py-3 font-medium text-gray-600">Bank</th>
+                        <th className="px-4 py-3 font-medium text-gray-600">Amount</th>
+                        <th className="px-4 py-3 font-medium text-gray-600">Remaining</th>
+                        <th className="px-4 py-3 font-medium text-gray-600">Period</th>
+                        <th className="px-4 py-3 font-medium text-gray-600">Status</th>
+                        <th className="px-4 py-3 font-medium text-gray-600 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                    {data.map(loan => (
+                        <tr key={loan.id} className="hover:bg-gray-50">
+                            <td className="px-4 py-3 font-medium text-gray-900">{loan.bank_name}</td>
+                            <td className="px-4 py-3">{format(convert(loan.amount, loan.currency as any, displayCurrency))}</td>
+                            <td className="px-4 py-3 text-orange-600 font-medium">{format(convert(loan.remaining_amount, loan.currency as any, displayCurrency))}</td>
+                            <td className="px-4 py-3">{loan.payment_period_months} months</td>
+                            <td className="px-4 py-3">
+                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${loan.status === 'paid' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                                    {loan.status}
+                                </span>
+                            </td>
+                            <td className="px-4 py-3 text-right">
+                                <button onClick={() => onEdit(loan)} className="p-1 text-gray-400 hover:text-primary mr-2"><Pencil className="w-4 h-4" /></button>
+                                <button onClick={() => onDelete(loan.id)} className="p-1 text-gray-400 hover:text-red-500"><Trash2 className="w-4 h-4" /></button>
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    );
+};
 
-const AdvancePaymentList = ({ data }: { data: AdvancePayment[] }) => (
-    <div>
-        <h3 className="text-lg font-semibold mb-2">Advance Payments</h3>
-        <ul>{data.map(l => <li key={l.id}>{l.recipient_name}: {l.remaining_amount} {l.currency}</li>)}</ul>
-    </div>
-);
+const PersonalLoanList: React.FC<LoanListProps<PersonalLoan>> = ({ data, onEdit, onDelete }) => {
+    const { format, convert, displayCurrency } = useCurrency();
+    if (data.length === 0) return <div className="text-gray-500 text-center py-8">No personal loans recorded.</div>;
+    return (
+        <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+                <thead className="bg-gray-50 text-left">
+                    <tr>
+                        <th className="px-4 py-3 font-medium text-gray-600">Creditor</th>
+                        <th className="px-4 py-3 font-medium text-gray-600">Amount</th>
+                        <th className="px-4 py-3 font-medium text-gray-600">Remaining</th>
+                        <th className="px-4 py-3 font-medium text-gray-600">Due Date</th>
+                        <th className="px-4 py-3 font-medium text-gray-600">Status</th>
+                        <th className="px-4 py-3 font-medium text-gray-600 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                    {data.map(loan => (
+                        <tr key={loan.id} className="hover:bg-gray-50">
+                            <td className="px-4 py-3 font-medium text-gray-900">{loan.creditor_name}</td>
+                            <td className="px-4 py-3">{format(convert(loan.amount, loan.currency as any, displayCurrency))}</td>
+                            <td className="px-4 py-3 text-orange-600 font-medium">{format(convert(loan.remaining_balance, loan.currency as any, displayCurrency))}</td>
+                            <td className="px-4 py-3">{loan.payment_due_date}</td>
+                            <td className="px-4 py-3">
+                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${loan.status === 'paid' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                                    {loan.status}
+                                </span>
+                            </td>
+                            <td className="px-4 py-3 text-right">
+                                <button onClick={() => onEdit(loan)} className="p-1 text-gray-400 hover:text-primary mr-2"><Pencil className="w-4 h-4" /></button>
+                                <button onClick={() => onDelete(loan.id)} className="p-1 text-gray-400 hover:text-red-500"><Trash2 className="w-4 h-4" /></button>
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    );
+};
 
-const UnpaidFuelList = ({ data }: { data: UnpaidFuel[] }) => (
-    <div>
-        <h3 className="text-lg font-semibold mb-2">Unpaid Fuel</h3>
-        <ul>{data.map(l => <li key={l.id}>{l.supplier}: {l.remaining_balance} {l.currency}</li>)}</ul>
-    </div>
-);
+const AdvancePaymentList: React.FC<LoanListProps<AdvancePayment>> = ({ data, onEdit, onDelete }) => {
+    const { format, convert, displayCurrency } = useCurrency();
+    if (data.length === 0) return <div className="text-gray-500 text-center py-8">No advance payments recorded.</div>;
+    return (
+        <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+                <thead className="bg-gray-50 text-left">
+                    <tr>
+                        <th className="px-4 py-3 font-medium text-gray-600">Recipient</th>
+                        <th className="px-4 py-3 font-medium text-gray-600">Amount</th>
+                        <th className="px-4 py-3 font-medium text-gray-600">Remaining</th>
+                        <th className="px-4 py-3 font-medium text-gray-600">Date Issued</th>
+                        <th className="px-4 py-3 font-medium text-gray-600">Status</th>
+                        <th className="px-4 py-3 font-medium text-gray-600 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                    {data.map(adv => (
+                        <tr key={adv.id} className="hover:bg-gray-50">
+                            <td className="px-4 py-3 font-medium text-gray-900">{adv.recipient_name}</td>
+                            <td className="px-4 py-3">{format(convert(adv.amount, adv.currency as any, displayCurrency))}</td>
+                            <td className="px-4 py-3 text-orange-600 font-medium">{format(convert(adv.remaining_amount, adv.currency as any, displayCurrency))}</td>
+                            <td className="px-4 py-3">{adv.date_issued}</td>
+                            <td className="px-4 py-3">
+                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${adv.status === 'recovered' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                                    {adv.status}
+                                </span>
+                            </td>
+                            <td className="px-4 py-3 text-right">
+                                <button onClick={() => onEdit(adv)} className="p-1 text-gray-400 hover:text-primary mr-2"><Pencil className="w-4 h-4" /></button>
+                                <button onClick={() => onDelete(adv.id)} className="p-1 text-gray-400 hover:text-red-500"><Trash2 className="w-4 h-4" /></button>
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    );
+};
+
+const UnpaidFuelList: React.FC<LoanListProps<UnpaidFuel>> = ({ data, onEdit, onDelete }) => {
+    const { format, convert, displayCurrency } = useCurrency();
+    if (data.length === 0) return <div className="text-gray-500 text-center py-8">No unpaid fuel recorded.</div>;
+    return (
+        <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+                <thead className="bg-gray-50 text-left">
+                    <tr>
+                        <th className="px-4 py-3 font-medium text-gray-600">Supplier</th>
+                        <th className="px-4 py-3 font-medium text-gray-600">Liters</th>
+                        <th className="px-4 py-3 font-medium text-gray-600">Total</th>
+                        <th className="px-4 py-3 font-medium text-gray-600">Remaining</th>
+                        <th className="px-4 py-3 font-medium text-gray-600">Status</th>
+                        <th className="px-4 py-3 font-medium text-gray-600 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                    {data.map(fuel => (
+                        <tr key={fuel.id} className="hover:bg-gray-50">
+                            <td className="px-4 py-3 font-medium text-gray-900">{fuel.supplier}</td>
+                            <td className="px-4 py-3">{fuel.liters} L</td>
+                            <td className="px-4 py-3">{format(convert(fuel.total_amount, fuel.currency as any, displayCurrency))}</td>
+                            <td className="px-4 py-3 text-orange-600 font-medium">{format(convert(fuel.remaining_balance, fuel.currency as any, displayCurrency))}</td>
+                            <td className="px-4 py-3">
+                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${fuel.status === 'paid' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                                    {fuel.status}
+                                </span>
+                            </td>
+                            <td className="px-4 py-3 text-right">
+                                <button onClick={() => onEdit(fuel)} className="p-1 text-gray-400 hover:text-primary mr-2"><Pencil className="w-4 h-4" /></button>
+                                <button onClick={() => onDelete(fuel.id)} className="p-1 text-gray-400 hover:text-red-500"><Trash2 className="w-4 h-4" /></button>
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    );
+};
 
 const LoansPage: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'bank' | 'personal' | 'advance' | 'fuel'>('bank');
@@ -45,6 +184,8 @@ const LoansPage: React.FC = () => {
     const [unpaidFuel, setUnpaidFuel] = useState<UnpaidFuel[]>([]);
     const [loading, setLoading] = useState(true);
     const [showNewRecordModal, setShowNewRecordModal] = useState(false);
+    const [deleteConfirm, setDeleteConfirm] = useState<{ type: string; id: number } | null>(null);
+    const [deleting, setDeleting] = useState(false);
 
     useEffect(() => {
         fetchData();
@@ -72,7 +213,40 @@ const LoansPage: React.FC = () => {
 
     const handleNewRecordSuccess = () => {
         setShowNewRecordModal(false);
-        fetchData(); // Refresh the data
+        fetchData();
+    };
+
+    const handleDelete = async () => {
+        if (!deleteConfirm) return;
+        setDeleting(true);
+        try {
+            switch (deleteConfirm.type) {
+                case 'bank':
+                    await loansService.deleteBankLoan(deleteConfirm.id);
+                    break;
+                case 'personal':
+                    await loansService.deletePersonalLoan(deleteConfirm.id);
+                    break;
+                case 'advance':
+                    await loansService.deleteAdvancePayment(deleteConfirm.id);
+                    break;
+                case 'fuel':
+                    await loansService.deleteUnpaidFuel(deleteConfirm.id);
+                    break;
+            }
+            setDeleteConfirm(null);
+            fetchData();
+        } catch (error) {
+            console.error('Failed to delete:', error);
+        } finally {
+            setDeleting(false);
+        }
+    };
+
+    const handleEdit = (item: any) => {
+        // For now, just log - full edit modal can be added later
+        console.log('Edit item:', item);
+        alert('Edit functionality coming soon. Use delete and recreate for now.');
     };
 
     return (
@@ -83,7 +257,7 @@ const LoansPage: React.FC = () => {
                     onClick={() => setShowNewRecordModal(true)}
                     className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-hover font-medium transition-colors"
                 >
-                    New Record
+                    + New Record
                 </button>
             </div>
 
@@ -96,7 +270,7 @@ const LoansPage: React.FC = () => {
                             : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                             }`}
                     >
-                        Bank Loans
+                        Bank Loans ({bankLoans.length})
                     </button>
                     <button
                         onClick={() => setActiveTab('personal')}
@@ -105,7 +279,7 @@ const LoansPage: React.FC = () => {
                             : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                             }`}
                     >
-                        Personal Loans
+                        Personal Loans ({personalLoans.length})
                     </button>
                     <button
                         onClick={() => setActiveTab('advance')}
@@ -114,7 +288,7 @@ const LoansPage: React.FC = () => {
                             : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                             }`}
                     >
-                        Advance Payments
+                        Advances ({advancePayments.length})
                     </button>
                     <button
                         onClick={() => setActiveTab('fuel')}
@@ -123,19 +297,21 @@ const LoansPage: React.FC = () => {
                             : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                             }`}
                     >
-                        Unpaid Fuel
+                        Unpaid Fuel ({unpaidFuel.length})
                     </button>
                 </nav>
             </div>
 
             {loading ? (
-                <div>Loading...</div>
+                <div className="flex items-center justify-center h-48">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                </div>
             ) : (
-                <div className="bg-white shadow rounded-lg p-6">
-                    {activeTab === 'bank' && <BankLoanList data={bankLoans} />}
-                    {activeTab === 'personal' && <PersonalLoanList data={personalLoans} />}
-                    {activeTab === 'advance' && <AdvancePaymentList data={advancePayments} />}
-                    {activeTab === 'fuel' && <UnpaidFuelList data={unpaidFuel} />}
+                <div className="bg-white shadow rounded-lg overflow-hidden">
+                    {activeTab === 'bank' && <BankLoanList data={bankLoans} onEdit={handleEdit} onDelete={(id) => setDeleteConfirm({ type: 'bank', id })} />}
+                    {activeTab === 'personal' && <PersonalLoanList data={personalLoans} onEdit={handleEdit} onDelete={(id) => setDeleteConfirm({ type: 'personal', id })} />}
+                    {activeTab === 'advance' && <AdvancePaymentList data={advancePayments} onEdit={handleEdit} onDelete={(id) => setDeleteConfirm({ type: 'advance', id })} />}
+                    {activeTab === 'fuel' && <UnpaidFuelList data={unpaidFuel} onEdit={handleEdit} onDelete={(id) => setDeleteConfirm({ type: 'fuel', id })} />}
                 </div>
             )}
 
@@ -156,6 +332,37 @@ const LoansPage: React.FC = () => {
                         {activeTab === 'personal' && <PersonalLoanForm onSuccess={handleNewRecordSuccess} onCancel={() => setShowNewRecordModal(false)} />}
                         {activeTab === 'advance' && <AdvancePaymentForm onSuccess={handleNewRecordSuccess} onCancel={() => setShowNewRecordModal(false)} />}
                         {activeTab === 'fuel' && <UnpaidFuelForm onSuccess={handleNewRecordSuccess} onCancel={() => setShowNewRecordModal(false)} />}
+                    </div>
+                </div>
+            )}
+
+            {/* Delete Confirmation Modal */}
+            {deleteConfirm && (
+                <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
+                    <div className="relative p-6 border w-full max-w-sm shadow-lg rounded-lg bg-white">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="p-2 bg-red-100 rounded-full">
+                                <AlertTriangle className="w-6 h-6 text-red-600" />
+                            </div>
+                            <h3 className="text-lg font-semibold text-gray-900">Confirm Delete</h3>
+                        </div>
+                        <p className="text-gray-600 mb-6">Are you sure you want to delete this record? This action cannot be undone.</p>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setDeleteConfirm(null)}
+                                className="flex-1 bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300 font-medium"
+                                disabled={deleting}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleDelete}
+                                className="flex-1 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 font-medium disabled:opacity-50"
+                                disabled={deleting}
+                            >
+                                {deleting ? 'Deleting...' : 'Delete'}
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
