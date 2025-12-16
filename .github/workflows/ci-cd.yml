@@ -102,6 +102,11 @@ jobs:
             # Pull latest images
             docker compose -f docker-compose.prod.yml pull
             
+            # Clean up old Docker images and build cache to prevent disk exhaustion
+            echo "Cleaning up old Docker images..."
+            docker image prune -af --filter "until=24h"
+            docker builder prune -af --filter "until=24h"
+            
             # Run SSL initialization (script handles existence checks)
             echo "Running SSL initialization check..."
             chmod +x init-letsencrypt.sh
