@@ -1,5 +1,141 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { loansService } from '../../services/loans';
+import { Search, ChevronDown, Check } from 'lucide-react';
+
+// List of banks operating in Rwanda
+const RWANDAN_BANKS = [
+    'Bank of Kigali',
+    'I&M Bank Rwanda',
+    'Equity Bank Rwanda',
+    'Access Bank Rwanda',
+    'BPR Bank Rwanda (Atlas Mara)',
+    'Cogebanque',
+    'Ecobank Rwanda',
+    'GT Bank Rwanda',
+    'NCBA Bank Rwanda',
+    'KCB Bank Rwanda',
+    'Bank of Africa Rwanda',
+    'Urwego Bank',
+    'AB Bank Rwanda',
+    'Zigama CSS',
+    'Development Bank of Rwanda (BRD)',
+    'National Bank of Rwanda (BNR)',
+] as const;
+
+interface SearchableSelectProps {
+    value: string;
+    onChange: (value: string) => void;
+    options: readonly string[];
+    placeholder?: string;
+    required?: boolean;
+}
+
+const SearchableSelect: React.FC<SearchableSelectProps> = ({
+    value,
+    onChange,
+    options,
+    placeholder = 'Select...',
+    required = false
+}) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
+    const containerRef = useRef<HTMLDivElement>(null);
+    const inputRef = useRef<HTMLInputElement>(null);
+
+    const filteredOptions = options.filter(option =>
+        option.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+                setIsOpen(false);
+                setSearchTerm('');
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    useEffect(() => {
+        if (isOpen && inputRef.current) {
+            inputRef.current.focus();
+        }
+    }, [isOpen]);
+
+    const handleSelect = (option: string) => {
+        onChange(option);
+        setIsOpen(false);
+        setSearchTerm('');
+    };
+
+    return (
+        <div ref={containerRef} className="relative">
+            <button
+                type="button"
+                onClick={() => setIsOpen(!isOpen)}
+                className="mt-1 w-full flex items-center justify-between rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:ring-1 focus:ring-primary text-sm bg-white text-left"
+            >
+                <span className={value ? 'text-gray-900' : 'text-gray-400'}>
+                    {value || placeholder}
+                </span>
+                <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {/* Hidden input for form validation */}
+            <input
+                type="text"
+                value={value}
+                required={required}
+                onChange={() => { }}
+                className="sr-only"
+                tabIndex={-1}
+            />
+
+            {isOpen && (
+                <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-hidden">
+                    {/* Search input */}
+                    <div className="p-2 border-b border-gray-100">
+                        <div className="relative">
+                            <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                            <input
+                                ref={inputRef}
+                                type="text"
+                                value={searchTerm}
+                                onChange={e => setSearchTerm(e.target.value)}
+                                placeholder="Search banks..."
+                                className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Options list */}
+                    <ul className="max-h-44 overflow-y-auto">
+                        {filteredOptions.length > 0 ? (
+                            filteredOptions.map(option => (
+                                <li key={option}>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleSelect(option)}
+                                        className={`w-full px-3 py-2 text-sm text-left flex items-center justify-between hover:bg-blue-50 transition-colors ${value === option ? 'bg-blue-50 text-primary' : 'text-gray-700'
+                                            }`}
+                                    >
+                                        <span>{option}</span>
+                                        {value === option && <Check className="w-4 h-4 text-primary" />}
+                                    </button>
+                                </li>
+                            ))
+                        ) : (
+                            <li className="px-3 py-2 text-sm text-gray-500 italic">
+                                No banks found
+                            </li>
+                        )}
+                    </ul>
+                </div>
+            )}
+        </div>
+    );
+};
 
 interface FormProps {
     onSuccess: () => void;
@@ -45,12 +181,11 @@ export const BankLoanForm: React.FC<FormProps> = ({ onSuccess, onCancel }) => {
 
             <div>
                 <label className={labelClasses}>Bank Name *</label>
-                <input
-                    type="text"
+                <SearchableSelect
                     value={formData.bank_name}
-                    onChange={e => setFormData({ ...formData, bank_name: e.target.value })}
-                    className={inputClasses}
-                    placeholder="e.g., Bank of Kigali"
+                    onChange={value => setFormData({ ...formData, bank_name: value })}
+                    options={RWANDAN_BANKS}
+                    placeholder="Select a bank..."
                     required
                 />
             </div>
