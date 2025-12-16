@@ -1,8 +1,5 @@
 
 import React, { useState, useMemo } from 'react';
-import {
-  formatCurrency,
-} from '../services/mockData';
 import { ReportFilter, Trip, Expense, Vehicle, Customer } from '../types';
 import { trips as tripApi, expenses as expenseApi, vehicles as vehicleApi, customers as customerApi } from '../services/api';
 import { useCurrency } from '../services/currencyContext';
@@ -35,7 +32,7 @@ import {
 } from 'lucide-react';
 
 const Reports: React.FC = () => {
-  const { convert } = useCurrency();
+  const { convert, format, displayCurrency } = useCurrency();
 
   const [filters, setFilters] = useState<ReportFilter>({
     dateRange: 'This Year',
@@ -277,7 +274,7 @@ const Reports: React.FC = () => {
             </div>
             <p className="text-sm font-medium text-steel uppercase tracking-wider">Total Income</p>
           </div>
-          <h3 className="text-3xl font-bold text-primary">{formatCurrency(totalIncome)}</h3>
+          <h3 className="text-3xl font-bold text-primary">{format(convert(totalIncome, 'USD', displayCurrency))}</h3>
           <p className="text-xs text-green-600 flex items-center gap-1 mt-2">
             <TrendingUp className="w-3 h-3" /> +12.5% vs last period
           </p>
@@ -290,7 +287,7 @@ const Reports: React.FC = () => {
             </div>
             <p className="text-sm font-medium text-steel uppercase tracking-wider">Total Expenses</p>
           </div>
-          <h3 className="text-3xl font-bold text-secondary">{formatCurrency(totalExpenses)}</h3>
+          <h3 className="text-3xl font-bold text-secondary">{format(convert(totalExpenses, 'USD', displayCurrency))}</h3>
           <p className="text-xs text-red-500 flex items-center gap-1 mt-2">
             <TrendingUp className="w-3 h-3" /> +5.2% vs last period
           </p>
@@ -304,7 +301,7 @@ const Reports: React.FC = () => {
             <p className="text-sm font-medium text-steel uppercase tracking-wider">Net Profit</p>
           </div>
           <h3 className={`text-3xl font-bold ${netProfit >= 0 ? 'text-green-700' : 'text-red-600'}`}>
-            {formatCurrency(netProfit)}
+            {format(convert(netProfit, 'USD', displayCurrency))}
           </h3>
           <p className="text-xs text-steel mt-2">
             Margin: {totalIncome > 0 ? ((netProfit / totalIncome) * 100).toFixed(1) : 0}%
@@ -322,10 +319,10 @@ const Reports: React.FC = () => {
               <LineChart data={monthlyData}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                 <XAxis dataKey="name" axisLine={false} tickLine={false} stroke="#94a3b8" />
-                <YAxis axisLine={false} tickLine={false} stroke="#94a3b8" tickFormatter={(val) => `$${val / 1000}k`} />
+                <YAxis axisLine={false} tickLine={false} stroke="#94a3b8" tickFormatter={(val) => format(convert(val, 'USD', displayCurrency)).replace(/[\d,\.]+/, (m) => (parseFloat(m.replace(/,/g, '')) / 1000).toFixed(0) + 'k')} />
                 <Tooltip
                   contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0' }}
-                  formatter={(value: number) => [`$${value}`, '']}
+                  formatter={(value: number) => [format(convert(value, 'USD', displayCurrency)), '']}
                 />
                 <Legend />
                 <Line type="monotone" dataKey="Income" stroke={COLORS.navy} strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
@@ -381,7 +378,7 @@ const Reports: React.FC = () => {
                     <Cell key={`cell-${index}`} fill={COLORS.pie[index % COLORS.pie.length]} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(val: number) => `$${val}`} />
+                <Tooltip formatter={(val: number) => format(convert(val, 'USD', displayCurrency))} />
               </PieChart>
             </ResponsiveContainer>
             {/* Center Label */}
@@ -414,12 +411,12 @@ const Reports: React.FC = () => {
             <div className="text-right">
               <p className="text-xs text-steel uppercase font-bold">Total Pending</p>
               <p className="text-xl font-bold text-secondary">
-                {formatCurrency(outstandingTrips.reduce((sum, t) => {
+                {format(convert(outstandingTrips.reduce((sum, t) => {
                   const paid = t.payments.reduce((p, c) => p + c.amount, 0);
                   const balance = t.totalPrice - paid;
                   // Convert each trip's balance to USD before summing
                   return sum + convert(balance, t.currency, 'USD');
-                }, 0))}
+                }, 0), 'USD', displayCurrency))}
               </p>
             </div>
           </div>
@@ -444,7 +441,7 @@ const Reports: React.FC = () => {
                       <td className="py-3 text-primary font-medium">{trip.customerName}</td>
                       <td className="py-3 text-steel">{trip.startDate}</td>
                       <td className="py-3 text-right pr-2">
-                        <Badge variant="warning">{formatCurrency(balance, trip.currency)}</Badge>
+                        <Badge variant="warning">{format(convert(balance, trip.currency, displayCurrency))}</Badge>
                       </td>
                     </tr>
                   );

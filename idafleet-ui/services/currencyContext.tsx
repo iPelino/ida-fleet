@@ -23,13 +23,55 @@ interface CurrencyContextType {
 
 const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined);
 
+const STORAGE_KEY_CURRENCY = 'ida_display_currency';
+const STORAGE_KEY_RATES = 'ida_exchange_rates';
+const STORAGE_KEY_RATES_CUSTOM = 'ida_custom_rates'; // Track if user has set custom rates
+
 export const CurrencyProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [displayCurrency, setDisplayCurrency] = useState<Currency>('USD');
-  const [exchangeRates, setExchangeRates] = useState<Record<Currency, number>>(DEFAULT_RATES);
+  // Initialize from localStorage if available
+  const [displayCurrency, setDisplayCurrencyState] = useState<Currency>(() => {
+    const saved = localStorage.getItem(STORAGE_KEY_CURRENCY);
+    return (saved as Currency) || 'USD';
+  });
+
+  const [exchangeRates, setExchangeRatesState] = useState<Record<Currency, number>>(() => {
+    const saved = localStorage.getItem(STORAGE_KEY_RATES);
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {
+        return DEFAULT_RATES;
+      }
+    }
+    return DEFAULT_RATES;
+  });
+
+  const [hasCustomRates, setHasCustomRates] = useState<boolean>(() => {
+    return localStorage.getItem(STORAGE_KEY_RATES_CUSTOM) === 'true';
+  });
+
   const [loading, setLoading] = useState(true);
 
-  // Fetch exchange rates from backend
+  // Wrapper to persist displayCurrency to localStorage
+  const setDisplayCurrency = (currency: Currency) => {
+    setDisplayCurrencyState(currency);
+    localStorage.setItem(STORAGE_KEY_CURRENCY, currency);
+  };
+
+  // Wrapper to persist exchange rates to localStorage
+  const setExchangeRates = (rates: Record<Currency, number>) => {
+    setExchangeRatesState(rates);
+    localStorage.setItem(STORAGE_KEY_RATES, JSON.stringify(rates));
+  };
+
+  // Fetch exchange rates from backend (only if no custom rates are set)
   const fetchRates = async () => {
+    // If user has set custom rates, don't overwrite with backend rates
+    if (hasCustomRates) {
+      setLoading(false);
+      return;
+    }
+
     try {
       const ratesMap = await exchangeRatesApi.getRatesMap();
 
@@ -53,7 +95,7 @@ export const CurrencyProvider: React.FC<{ children: ReactNode }> = ({ children }
       setExchangeRates(newRates);
     } catch (error) {
       console.error('Failed to fetch exchange rates, using defaults:', error);
-      // Keep using default rates
+      // Keep using default/saved rates
     } finally {
       setLoading(false);
     }
@@ -63,12 +105,16 @@ export const CurrencyProvider: React.FC<{ children: ReactNode }> = ({ children }
     fetchRates();
   }, []);
 
-  // Update a specific currency rate (relative to USD)
+  // Update a specific currency rate (relative to USD) - marks as custom
   const updateRate = (currency: Currency, rate: number) => {
-    setExchangeRates(prev => ({
-      ...prev,
+    const newRates = {
+      ...exchangeRates,
       [currency]: rate
-    }));
+    };
+    setExchangeRates(newRates);
+    // Mark that user has set custom rates (won't be overwritten by backend)
+    setHasCustomRates(true);
+    localStorage.setItem(STORAGE_KEY_RATES_CUSTOM, 'true');
   };
 
   // Convert amount from one currency to another
