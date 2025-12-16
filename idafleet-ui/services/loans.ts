@@ -7,10 +7,12 @@ import {
     LoanPayment
 } from '../types';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+// Use the same API URL pattern as api.ts
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 const getHeaders = () => {
-    const token = localStorage.getItem('token');
+    // Use 'authToken' to match the rest of the application (api.ts, App.tsx, Login.tsx)
+    const token = localStorage.getItem('authToken');
     return {
         headers: {
             'Authorization': `Token ${token}`,
