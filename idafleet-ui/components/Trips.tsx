@@ -5,6 +5,7 @@ import { Trip, TripStatus, Currency, Payment } from '../types';
 import { Badge } from './ui/Badge';
 import { MapPin, Calendar, Globe, Plus, X, Save, Truck, User, DollarSign, CreditCard, ArrowRight, Search, ChevronDown, Check, AlertCircle, FileText, Edit, Trash2 } from 'lucide-react';
 import { useCurrency } from '../services/currencyContext';
+import DateFilter, { DateFilterValue } from './DateFilter';
 
 // Rwandan Districts
 const RWANDA_DISTRICTS = [
@@ -35,6 +36,12 @@ const Trips: React.FC = () => {
   const [vehicles, setVehicles] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [dateFilter, setDateFilter] = useState<DateFilterValue>({
+    startDate: null,
+    endDate: null,
+    preset: 'all',
+    label: 'All Time'
+  });
 
   // New Shipment Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -101,11 +108,31 @@ const Trips: React.FC = () => {
   });
 
   // Filter Logic
-  const filteredTrips = trips.filter(t =>
-    t.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    t.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    t.customerName.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredTrips = trips.filter(t => {
+    const matchesSearch = t.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      t.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      t.customerName.toLowerCase().includes(searchTerm.toLowerCase());
+
+    // Date filter
+    let matchesDate = true;
+    if (dateFilter.startDate || dateFilter.endDate) {
+      const tripDate = new Date(t.startDate);
+      tripDate.setHours(0, 0, 0, 0);
+
+      if (dateFilter.startDate) {
+        const startDate = new Date(dateFilter.startDate);
+        startDate.setHours(0, 0, 0, 0);
+        matchesDate = matchesDate && tripDate >= startDate;
+      }
+      if (dateFilter.endDate) {
+        const endDate = new Date(dateFilter.endDate);
+        endDate.setHours(23, 59, 59, 999);
+        matchesDate = matchesDate && tripDate <= endDate;
+      }
+    }
+
+    return matchesSearch && matchesDate;
+  });
 
   // Filtered lists for dropdowns
   const filteredCustomersSelect = customers.filter(c =>
@@ -351,17 +378,20 @@ const Trips: React.FC = () => {
 
       {/* Search Bar */}
       <div className="bg-surface p-4 rounded-xl border border-steel-lighter shadow-sm">
-        <div className="relative max-w-lg">
-          <input
-            type="text"
-            placeholder="Search shipments by ID, customer or description..."
-            className="w-full pl-4 pr-10 py-2 border border-steel-lighter rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-primary"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          <button className="absolute right-0 top-0 bottom-0 px-3 bg-primary text-white rounded-r-lg hover:bg-primary-hover">
-            <Search className="w-4 h-4" />
-          </button>
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="relative flex-1 max-w-lg">
+            <input
+              type="text"
+              placeholder="Search shipments by ID, customer or description..."
+              className="w-full pl-4 pr-10 py-2 border border-steel-lighter rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-primary"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <button className="absolute right-0 top-0 bottom-0 px-3 bg-primary text-white rounded-r-lg hover:bg-primary-hover">
+              <Search className="w-4 h-4" />
+            </button>
+          </div>
+          <DateFilter onFilterChange={setDateFilter} />
         </div>
       </div>
 

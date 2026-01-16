@@ -17,6 +17,7 @@ import {
 } from 'recharts';
 import { TrendingUp, TrendingDown, DollarSign, Wallet, Truck, AlertCircle, CreditCard } from 'lucide-react';
 import { Badge } from './ui/Badge';
+import DateFilter, { DateFilterValue } from './DateFilter';
 
 // Moved KPICard definition to top to avoid hoisting issues
 const KPICard: React.FC<{ title: string; amount: string; icon: React.ReactNode; trend: string; trendColor: string }> = ({
@@ -56,6 +57,12 @@ const Dashboard: React.FC = () => {
   const [advancePayments, setAdvancePayments] = useState<AdvancePayment[]>([]);
   const [unpaidFuel, setUnpaidFuel] = useState<UnpaidFuel[]>([]);
   const [loading, setLoading] = useState(true);
+  const [dateFilter, setDateFilter] = useState<DateFilterValue>({
+    startDate: null,
+    endDate: null,
+    preset: 'all',
+    label: 'All Time'
+  });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -96,22 +103,67 @@ const Dashboard: React.FC = () => {
     fetchData();
   }, []);
 
+  // --- Filter trips and expenses by date ---
+  const filteredTrips = React.useMemo(() => {
+    if (!dateFilter.startDate && !dateFilter.endDate) return trips;
+
+    return trips.filter(trip => {
+      const tripDate = new Date(trip.startDate);
+      tripDate.setHours(0, 0, 0, 0);
+
+      let matches = true;
+      if (dateFilter.startDate) {
+        const start = new Date(dateFilter.startDate);
+        start.setHours(0, 0, 0, 0);
+        matches = matches && tripDate >= start;
+      }
+      if (dateFilter.endDate) {
+        const end = new Date(dateFilter.endDate);
+        end.setHours(23, 59, 59, 999);
+        matches = matches && tripDate <= end;
+      }
+      return matches;
+    });
+  }, [trips, dateFilter]);
+
+  const filteredExpenses = React.useMemo(() => {
+    if (!dateFilter.startDate && !dateFilter.endDate) return expenses;
+
+    return expenses.filter(exp => {
+      const expDate = new Date(exp.date);
+      expDate.setHours(0, 0, 0, 0);
+
+      let matches = true;
+      if (dateFilter.startDate) {
+        const start = new Date(dateFilter.startDate);
+        start.setHours(0, 0, 0, 0);
+        matches = matches && expDate >= start;
+      }
+      if (dateFilter.endDate) {
+        const end = new Date(dateFilter.endDate);
+        end.setHours(23, 59, 59, 999);
+        matches = matches && expDate <= end;
+      }
+      return matches;
+    });
+  }, [expenses, dateFilter]);
+
   // --- Dynamic KPI Calculation ---
 
   // 1. Total Income (Converted to Display Currency)
-  const totalIncome = trips.reduce((acc, trip) => {
+  const totalIncome = filteredTrips.reduce((acc, trip) => {
     const paidAmount = trip.payments.reduce((sum, p) => sum + p.amount, 0);
     // Payment amounts are in trip.currency
     return acc + convert(paidAmount, trip.currency);
   }, 0);
 
   // 2. Total Expenses
-  const totalExpenses = expenses.reduce((acc, exp) => {
+  const totalExpenses = filteredExpenses.reduce((acc, exp) => {
     return acc + convert(exp.amount, exp.currency);
   }, 0);
 
   // 3. Pending Payments (Outstanding Balance)
-  const pendingPayments = trips.reduce((acc, trip) => {
+  const pendingPayments = filteredTrips.reduce((acc, trip) => {
     const paidAmount = trip.payments.reduce((sum, p) => sum + p.amount, 0);
     const balance = trip.totalPrice - paidAmount;
     return acc + convert(balance, trip.currency);
@@ -154,7 +206,7 @@ const Dashboard: React.FC = () => {
   const expenseCategoryData = React.useMemo(() => {
     const aggregation: { [key: string]: number } = {};
 
-    expenses.forEach(exp => {
+    filteredExpenses.forEach(exp => {
       const cat = exp.category || 'Other';
       const amount = convert(exp.amount, exp.currency);
       aggregation[cat] = (aggregation[cat] || 0) + amount;
@@ -163,16 +215,19 @@ const Dashboard: React.FC = () => {
     return Object.entries(aggregation)
       .map(([name, value]) => ({ name, value }))
       .sort((a, b) => b.value - a.value); // Sort by value descending
-  }, [expenses, convert]);
+  }, [filteredExpenses, convert]);
 
   const COLORS = ['#1E3A8A', '#F97316', '#64748B', '#3b82f6'];
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-primary">Dashboard Overview</h1>
-        <p className="text-steel mt-1">Viewing financial data in <span className="font-bold text-primary">{displayCurrency}</span>.</p>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-primary">Dashboard Overview</h1>
+          <p className="text-steel mt-1">Viewing financial data in <span className="font-bold text-primary">{displayCurrency}</span>.</p>
+        </div>
+        <DateFilter onFilterChange={setDateFilter} />
       </div>
 
       {/* System Alert Widget */}
@@ -309,7 +364,7 @@ const Dashboard: React.FC = () => {
             <button className="text-sm text-secondary font-medium hover:text-secondary-hover">View All</button>
           </div>
           <div className="divide-y divide-steel-lighter">
-            {trips.slice(0, 3).map(trip => (
+            {filteredTrips.slice(0, 3).map(trip => (
               <div key={trip.id} className="p-4 hover:bg-slate-50 transition-colors">
                 <div className="flex justify-between items-center">
                   <div>

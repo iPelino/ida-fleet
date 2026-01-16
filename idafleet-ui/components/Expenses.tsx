@@ -4,6 +4,7 @@ import { Expense, Currency } from '../types';
 import { Badge } from './ui/Badge';
 import { Plus, Filter, Search, Calendar, FileText, Truck, MapPin, Fuel, Wrench, Receipt, X, Save, DollarSign, ChevronDown, Check, PenTool, Trash2 } from 'lucide-react';
 import { useCurrency } from '../services/currencyContext';
+import DateFilter, { DateFilterValue } from './DateFilter';
 
 const Expenses: React.FC = () => {
   const { convert, format, displayCurrency } = useCurrency();
@@ -43,6 +44,12 @@ const Expenses: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState<string>('All');
   const [filterType, setFilterType] = useState<string>('All');
+  const [dateFilter, setDateFilter] = useState<DateFilterValue>({
+    startDate: null,
+    endDate: null,
+    preset: 'all',
+    label: 'All Time'
+  });
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -73,7 +80,26 @@ const Expenses: React.FC = () => {
       (e.category?.toLowerCase() || '').includes(searchTerm.toLowerCase());
     const matchesCategory = filterCategory === 'All' || e.category === filterCategory;
     const matchesType = filterType === 'All' || e.expenseType === filterType;
-    return matchesSearch && matchesCategory && matchesType;
+
+    // Date filter
+    let matchesDate = true;
+    if (dateFilter.startDate || dateFilter.endDate) {
+      const expenseDate = new Date(e.date);
+      expenseDate.setHours(0, 0, 0, 0);
+
+      if (dateFilter.startDate) {
+        const startDate = new Date(dateFilter.startDate);
+        startDate.setHours(0, 0, 0, 0);
+        matchesDate = matchesDate && expenseDate >= startDate;
+      }
+      if (dateFilter.endDate) {
+        const endDate = new Date(dateFilter.endDate);
+        endDate.setHours(23, 59, 59, 999);
+        matchesDate = matchesDate && expenseDate <= endDate;
+      }
+    }
+
+    return matchesSearch && matchesCategory && matchesType && matchesDate;
   });
 
   // --- Calculations (Dynamic Currency) ---
@@ -323,6 +349,8 @@ const Expenses: React.FC = () => {
             <option value="vehicle">Vehicle Only</option>
             <option value="trip">Trip Related</option>
           </select>
+
+          <DateFilter onFilterChange={setDateFilter} />
         </div>
       </div>
 
