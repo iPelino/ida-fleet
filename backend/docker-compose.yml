@@ -10,6 +10,9 @@ services:
       - "8000:8000"
     environment:
       - DEBUG=1
+      - POSTGRES_DB=fleet_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
       - DATABASE_URL=postgres://postgres:postgres@db:5432/fleet_db
     depends_on:
       - db

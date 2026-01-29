@@ -7,6 +7,11 @@ COPY package.json package-lock.json* ./
 RUN npm install
 
 COPY . .
+
+# Set the API URL for the build - uses relative path so nginx proxies to backend
+ARG VITE_API_URL=/api
+ENV VITE_API_URL=$VITE_API_URL
+
 RUN npm run build
 
 # Stage 2: Serve the application with Nginx
