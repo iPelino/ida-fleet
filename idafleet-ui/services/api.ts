@@ -144,18 +144,33 @@ export const expenses = {
             amount: parseFloat(item.amount), // Ensure amount is a number
             currency: item.currency || 'USD', // Default currency if missing
             description: item.description || '', // Handle null description
+            receipt_file_url: item.receipt_file_url || null,
         }));
     },
-    create: async (expenseData: Partial<Expense>): Promise<Expense> => {
-        const response = await api.post('/expenses/', expenseData);
+    create: async (expenseData: Partial<Expense> | FormData): Promise<Expense> => {
+        const isFormData = expenseData instanceof FormData;
+        const response = await api.post('/expenses/', expenseData, {
+            headers: isFormData ? { 'Content-Type': 'multipart/form-data' } : undefined
+        });
         return response.data;
     },
-    update: async (id: string, expenseData: Partial<Expense>): Promise<Expense> => {
-        const response = await api.patch(`/expenses/${id}/`, expenseData);
+    update: async (id: string, expenseData: Partial<Expense> | FormData): Promise<Expense> => {
+        const isFormData = expenseData instanceof FormData;
+        const response = await api.patch(`/expenses/${id}/`, expenseData, {
+            headers: isFormData ? { 'Content-Type': 'multipart/form-data' } : undefined
+        });
         return response.data;
     },
     delete: async (id: string): Promise<void> => {
         await api.delete(`/expenses/${id}/`);
+    },
+    approve: async (id: string): Promise<Expense> => {
+        const response = await api.post(`/expenses/${id}/approve/`);
+        return response.data;
+    },
+    reject: async (id: string, reason: string): Promise<Expense> => {
+        const response = await api.post(`/expenses/${id}/reject/`, { reason });
+        return response.data;
     },
 };
 

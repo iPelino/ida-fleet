@@ -27,6 +27,8 @@ export interface Vehicle {
   notes?: string;
 }
 
+export type ExpenseStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+
 export interface Expense {
   id: string;
   date: string;
@@ -40,6 +42,13 @@ export interface Expense {
   description: string;
   vehicleName?: string;
   tripDescription?: string;
+  receipt_file?: string;      // For upload (File will be converted to FormData)
+  receipt_file_url?: string;  // Full URL returned from backend
+  status: ExpenseStatus;
+  approved_by?: string;
+  approved_by_name?: string;
+  approved_at?: string;
+  rejection_reason?: string;
 }
 
 export interface Payment {

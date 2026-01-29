@@ -34,13 +34,28 @@ class ExpenseSerializer(serializers.ModelSerializer):
     vehicleName = serializers.SerializerMethodField()
     tripDescription = serializers.CharField(source='trip.description', read_only=True)
     converted_amount = serializers.SerializerMethodField()
+    receipt_file_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Expense
+        approved_by_name = serializers.CharField(source='approved_by.email', read_only=True)
+    
+    class Meta:
+        model = Expense
         fields = '__all__'
+        read_only_fields = ['status', 'approved_by', 'approved_at', 'rejection_reason', 'createdAt']
 
     def get_vehicleName(self, obj):
         return str(obj.vehicle)
+    
+    def get_receipt_file_url(self, obj):
+        """Return the full URL for the receipt file"""
+        if obj.receipt_file:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.receipt_file.url)
+            return obj.receipt_file.url
+        return None
     
     def get_converted_amount(self, obj):
         """Return amount converted to the requested display currency"""

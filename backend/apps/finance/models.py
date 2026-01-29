@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from django.core.validators import FileExtensionValidator
 from decimal import Decimal
 
 class ExchangeRate(models.Model):
@@ -111,8 +112,26 @@ class Expense(models.Model):
     vendor = models.CharField(max_length=200, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     receiptUrl = models.URLField(blank=True, null=True)
+    receipt_file = models.FileField(
+        upload_to='receipts/%Y/%m/',
+        blank=True,
+        null=True,
+        validators=[FileExtensionValidator(allowed_extensions=['pdf', 'jpg', 'jpeg', 'png', 'gif'])],
+        help_text="Upload receipt image or PDF (optional)"
+    )
     createdBy = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
     date = models.DateTimeField()
+    
+    STATUS_CHOICES = (
+        ('PENDING', 'Pending'),
+        ('APPROVED', 'Approved'),
+        ('REJECTED', 'Rejected'),
+    )
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
+    approved_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='approved_expenses')
+    approved_at = models.DateTimeField(null=True, blank=True)
+    rejection_reason = models.TextField(blank=True, null=True)
+    
     createdAt = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -133,4 +152,9 @@ class Expense(models.Model):
                 self.exchangeRate = ExchangeRate.get_rate(self.currency, 'USD')
             except ValueError:
                 pass
+        
+        # New expenses should be pending by default
+        if not self.pk and not self.status:
+            self.status = 'PENDING'
+            
         super().save(*args, **kwargs)

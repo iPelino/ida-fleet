@@ -1,10 +1,11 @@
 
 import React, { useState } from 'react';
-import { Expense, Currency } from '../types';
+import { Expense, Currency, User } from '../types';
 import { Badge } from './ui/Badge';
-import { Plus, Filter, Search, Calendar, FileText, Truck, MapPin, Fuel, Wrench, Receipt, X, Save, DollarSign, ChevronDown, Check, PenTool, Trash2 } from 'lucide-react';
+import { Plus, Filter, Search, Calendar, FileText, Truck, MapPin, Fuel, Wrench, Receipt, X, Save, DollarSign, ChevronDown, Check, PenTool, Trash2, Paperclip, Upload } from 'lucide-react';
 import { useCurrency } from '../services/currencyContext';
 import DateFilter, { DateFilterValue } from './DateFilter';
+import VehicleFilter from './VehicleFilter';
 
 const Expenses: React.FC = () => {
   const { convert, format, displayCurrency } = useCurrency();
@@ -15,22 +16,25 @@ const Expenses: React.FC = () => {
   const [vehicles, setVehicles] = useState<any[]>([]);
   const [trips, setTrips] = useState<any[]>([]);
   const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   React.useEffect(() => {
     const fetchData = async () => {
       try {
-        const [expensesData, vehiclesData, tripsData, categoriesData] = await Promise.all([
+        const [expensesData, vehiclesData, tripsData, categoriesData, currentUserData] = await Promise.all([
           import('../services/api').then(m => m.expenses.getAll()),
           import('../services/api').then(m => m.vehicles.getAll()),
           import('../services/api').then(m => m.trips.getAll()),
-          import('../services/api').then(m => m.expenseCategories.getAll())
+          import('../services/api').then(m => m.expenseCategories.getAll()),
+          import('../services/api').then(m => m.auth.getCurrentUser().catch(() => null))
         ]);
         console.log('Fetched categories:', categoriesData);
         setExpenses(expensesData);
         setVehicles(vehiclesData);
         setTrips(tripsData);
         setCategories(categoriesData);
+        setCurrentUser(currentUserData as User | null);
       } catch (error) {
         console.error('Failed to fetch data:', error);
       } finally {
@@ -50,6 +54,7 @@ const Expenses: React.FC = () => {
     preset: 'all',
     label: 'All Time'
   });
+  const [filterVehicleId, setFilterVehicleId] = useState<string | null>(null);
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -74,12 +79,19 @@ const Expenses: React.FC = () => {
   const [isTripOpen, setIsTripOpen] = useState(false);
   const [tripSearch, setTripSearch] = useState('');
 
+  // Receipt File State
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const [existingReceiptUrl, setExistingReceiptUrl] = useState<string | null>(null);
+
   // --- Filtering Logic ---
   const filteredExpenses = expenses.filter(e => {
     const matchesSearch = (e.description?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
       (e.category?.toLowerCase() || '').includes(searchTerm.toLowerCase());
     const matchesCategory = filterCategory === 'All' || e.category === filterCategory;
     const matchesType = filterType === 'All' || e.expenseType === filterType;
+
+    // Vehicle filter
+    const matchesVehicle = !filterVehicleId || e.vehicleId === filterVehicleId;
 
     // Date filter
     let matchesDate = true;
@@ -99,7 +111,7 @@ const Expenses: React.FC = () => {
       }
     }
 
-    return matchesSearch && matchesCategory && matchesType && matchesDate;
+    return matchesSearch && matchesCategory && matchesType && matchesVehicle && matchesDate;
   });
 
   // --- Calculations (Dynamic Currency) ---
@@ -139,6 +151,19 @@ const Expenses: React.FC = () => {
     }));
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file type
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf'];
+      if (!allowedTypes.includes(file.type)) {
+        alert('Please upload an image (JPG, PNG, GIF) or PDF file.');
+        return;
+      }
+      setReceiptFile(file);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -148,34 +173,32 @@ const Expenses: React.FC = () => {
     }
 
     try {
+      // Build FormData for file upload support
+      const submitData = new FormData();
+      submitData.append('date', formData.date || new Date().toISOString().split('T')[0]);
+      submitData.append('vehicle', formData.vehicleId || '');
+      if (formData.expenseType === 'trip' && formData.tripId) {
+        submitData.append('trip', formData.tripId);
+      }
+      submitData.append('expenseType', formData.expenseType || 'vehicle');
+      submitData.append('category', formData.category || 'Other');
+      submitData.append('amount', String(formData.amount || 0));
+      submitData.append('currency', formData.currency || 'USD');
+      submitData.append('description', formData.description || '');
+
+      // Append file if selected
+      if (receiptFile) {
+        submitData.append('receipt_file', receiptFile);
+      }
+
       if (isEditMode && editingId) {
         // Update existing expense
-        const updatedExpense = await import('../services/api').then(m => m.expenses.update(editingId, {
-          date: formData.date || new Date().toISOString().split('T')[0],
-          vehicle: formData.vehicleId,
-          trip: formData.expenseType === 'trip' ? formData.tripId : undefined,
-          expenseType: (formData.expenseType as 'vehicle' | 'trip') || 'vehicle',
-          category: formData.category || 'Other',
-          amount: formData.amount || 0,
-          currency: (formData.currency as Currency) || 'USD',
-          description: formData.description || '',
-        } as any));
-
-        setExpenses(expenses.map(e => e.id === editingId ? updatedExpense : e));
+        const updatedExpense: any = await import('../services/api').then(m => m.expenses.update(editingId, submitData));
+        setExpenses(expenses.map(e => e.id === editingId ? { ...e, ...updatedExpense, vehicleId: String(updatedExpense.vehicle || e.vehicleId), tripId: updatedExpense.trip ? String(updatedExpense.trip) : e.tripId } : e));
       } else {
         // Create new expense
-        const newExpense = await import('../services/api').then(m => m.expenses.create({
-          date: formData.date || new Date().toISOString().split('T')[0],
-          vehicle: formData.vehicleId,
-          trip: formData.expenseType === 'trip' ? formData.tripId : undefined,
-          expenseType: (formData.expenseType as 'vehicle' | 'trip') || 'vehicle',
-          category: formData.category || 'Other',
-          amount: formData.amount || 0,
-          currency: (formData.currency as Currency) || 'USD',
-          description: formData.description || '',
-        } as any));
-
-        setExpenses([newExpense, ...expenses]);
+        const newExpense: any = await import('../services/api').then(m => m.expenses.create(submitData));
+        setExpenses([{ ...newExpense, vehicleId: String(newExpense.vehicle), tripId: newExpense.trip ? String(newExpense.trip) : undefined }, ...expenses]);
       }
 
       setIsModalOpen(false);
@@ -195,6 +218,8 @@ const Expenses: React.FC = () => {
       });
       setVehicleSearch('');
       setTripSearch('');
+      setReceiptFile(null);
+      setExistingReceiptUrl(null);
     } catch (error: any) {
       console.error('Failed to save expense:', error);
       console.log('Error config:', error.config);
@@ -222,6 +247,8 @@ const Expenses: React.FC = () => {
     setEditingId(expense.id);
     setIsEditMode(true);
     setIsModalOpen(true);
+    setReceiptFile(null);
+    setExistingReceiptUrl(expense.receipt_file_url || null);
   };
 
   const handleDelete = async (id: string) => {
@@ -235,6 +262,37 @@ const Expenses: React.FC = () => {
     } catch (error) {
       console.error('Failed to delete expense:', error);
       alert('Failed to delete expense. Please try again.');
+    }
+  };
+
+  const handleApprove = async (id: string) => {
+    try {
+      const updated = await import('../services/api').then(m => m.expenses.approve(id));
+      // Update local state keeping other fields that might not be in response if not full object
+      // Assuming updated returns the full object or we merge
+      setExpenses(expenses.map(e => e.id === id ? { ...e, ...updated, vehicleId: String(updated.vehicleId || e.vehicleId) } : e));
+    } catch (error) {
+      alert('Failed to approve expense');
+    }
+  };
+
+  const handleReject = async (id: string) => {
+    const reason = prompt("Enter rejection reason:");
+    if (reason === null) return; // Cancelled
+
+    try {
+      const updated = await import('../services/api').then(m => m.expenses.reject(id, reason));
+      setExpenses(expenses.map(e => e.id === id ? { ...e, ...updated, vehicleId: String(updated.vehicleId || e.vehicleId) } : e));
+    } catch (error) {
+      alert('Failed to reject expense');
+    }
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'APPROVED': return <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded border border-green-400">Approved</span>;
+      case 'REJECTED': return <span className="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded border border-red-400">Rejected</span>;
+      default: return <span className="bg-amber-100 text-amber-800 text-xs font-medium px-2.5 py-0.5 rounded border border-amber-400">Pending</span>;
     }
   };
 
@@ -315,7 +373,7 @@ const Expenses: React.FC = () => {
           </button>
         </div>
 
-        <div className="flex gap-4">
+        <div className="flex gap-4 flex-wrap">
           <div className="flex items-center gap-2">
             <Filter className="w-4 h-4 text-steel" />
             <select
@@ -350,6 +408,7 @@ const Expenses: React.FC = () => {
             <option value="trip">Trip Related</option>
           </select>
 
+          <VehicleFilter onFilterChange={setFilterVehicleId} />
           <DateFilter onFilterChange={setDateFilter} />
         </div>
       </div>
@@ -382,6 +441,17 @@ const Expenses: React.FC = () => {
                       {getTripDesc(expense.tripId)}
                     </span>
                   )}
+                  {expense.receipt_file_url && (
+                    <a
+                      href={expense.receipt_file_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1 bg-green-50 text-green-700 px-2 py-0.5 rounded border border-green-100 hover:bg-green-100 transition-colors"
+                    >
+                      <Paperclip className="w-3 h-3" />
+                      Receipt
+                    </a>
+                  )}
                 </div>
               </div>
             </div>
@@ -402,6 +472,15 @@ const Expenses: React.FC = () => {
                     <span className="text-xs text-steel-light">
                       ({expense.currency} {expense.amount})
                     </span>
+                  )}
+                  <div className="mt-1 flex justify-end">
+                    {getStatusBadge(expense.status || 'PENDING')}
+                  </div>
+                  {expense.status === 'PENDING' && (currentUser?.role === 'manager' || currentUser?.role === 'admin') && (
+                    <div className="flex gap-2 mt-2 justify-end">
+                      <button onClick={() => handleApprove(expense.id)} className="text-xs bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700">Approve</button>
+                      <button onClick={() => handleReject(expense.id)} className="text-xs bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700">Reject</button>
+                    </div>
                   )}
                 </div>
                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -504,6 +583,50 @@ const Expenses: React.FC = () => {
                     value={formData.description}
                     onChange={handleInputChange}
                   />
+                </div>
+
+                {/* Receipt Upload */}
+                <div className="space-y-1.5 md:col-span-2">
+                  <label className="text-sm font-medium text-primary">Receipt (Optional)</label>
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-3">
+                      <label className="flex items-center gap-2 px-4 py-2 border border-steel-lighter rounded-lg cursor-pointer hover:bg-slate-50 transition-colors">
+                        <Upload className="w-4 h-4 text-steel" />
+                        <span className="text-sm text-steel">
+                          {receiptFile ? receiptFile.name : 'Choose file'}
+                        </span>
+                        <input
+                          type="file"
+                          accept=".jpg,.jpeg,.png,.gif,.pdf,image/*,application/pdf"
+                          onChange={handleFileChange}
+                          className="hidden"
+                        />
+                      </label>
+                      {receiptFile && (
+                        <button
+                          type="button"
+                          onClick={() => setReceiptFile(null)}
+                          className="text-xs text-red-600 hover:underline"
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
+                    {existingReceiptUrl && !receiptFile && (
+                      <div className="flex items-center gap-2 text-sm text-steel">
+                        <Paperclip className="w-4 h-4" />
+                        <a
+                          href={existingReceiptUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:underline"
+                        >
+                          View current receipt
+                        </a>
+                      </div>
+                    )}
+                    <p className="text-xs text-steel-light">Accepted: JPG, PNG, GIF, PDF</p>
+                  </div>
                 </div>
               </div>
               <div className="pt-4 flex justify-end gap-2">
