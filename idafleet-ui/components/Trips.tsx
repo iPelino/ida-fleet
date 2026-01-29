@@ -6,6 +6,7 @@ import { Badge } from './ui/Badge';
 import { MapPin, Calendar, Globe, Plus, X, Save, Truck, User, DollarSign, CreditCard, ArrowRight, Search, ChevronDown, Check, AlertCircle, FileText, Edit, Trash2 } from 'lucide-react';
 import { useCurrency } from '../services/currencyContext';
 import DateFilter, { DateFilterValue } from './DateFilter';
+import VehicleFilter from './VehicleFilter';
 
 // Rwandan Districts
 const RWANDA_DISTRICTS = [
@@ -42,6 +43,7 @@ const Trips: React.FC = () => {
     preset: 'all',
     label: 'All Time'
   });
+  const [filterVehicleId, setFilterVehicleId] = useState<string | null>(null);
 
   // New Shipment Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -113,6 +115,11 @@ const Trips: React.FC = () => {
       t.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
       t.customerName.toLowerCase().includes(searchTerm.toLowerCase());
 
+    // Vehicle filter
+    const matchesVehicle = !filterVehicleId ||
+      (t as any).vehicleId === filterVehicleId ||
+      (t as any).vehicle?.id === filterVehicleId;
+
     // Date filter
     let matchesDate = true;
     if (dateFilter.startDate || dateFilter.endDate) {
@@ -131,7 +138,7 @@ const Trips: React.FC = () => {
       }
     }
 
-    return matchesSearch && matchesDate;
+    return matchesSearch && matchesVehicle && matchesDate;
   });
 
   // Filtered lists for dropdowns
@@ -391,6 +398,7 @@ const Trips: React.FC = () => {
               <Search className="w-4 h-4" />
             </button>
           </div>
+          <VehicleFilter onFilterChange={setFilterVehicleId} />
           <DateFilter onFilterChange={setDateFilter} />
         </div>
       </div>

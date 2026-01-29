@@ -18,6 +18,7 @@ import {
 import { TrendingUp, TrendingDown, DollarSign, Wallet, Truck, AlertCircle, CreditCard } from 'lucide-react';
 import { Badge } from './ui/Badge';
 import DateFilter, { DateFilterValue } from './DateFilter';
+import VehicleFilter from './VehicleFilter';
 
 // Moved KPICard definition to top to avoid hoisting issues
 const KPICard: React.FC<{ title: string; amount: string; icon: React.ReactNode; trend: string; trendColor: string }> = ({
@@ -63,6 +64,7 @@ const Dashboard: React.FC = () => {
     preset: 'all',
     label: 'All Time'
   });
+  const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -103,11 +105,20 @@ const Dashboard: React.FC = () => {
     fetchData();
   }, []);
 
-  // --- Filter trips and expenses by date ---
+  // --- Filter trips and expenses by date and vehicle ---
   const filteredTrips = React.useMemo(() => {
-    if (!dateFilter.startDate && !dateFilter.endDate) return trips;
+    let result = trips;
 
-    return trips.filter(trip => {
+    // Filter by vehicle
+    if (selectedVehicleId) {
+      result = result.filter(trip =>
+        (trip as any).vehicleId === selectedVehicleId || (trip as any).vehicle?.id === selectedVehicleId
+      );
+    }
+
+    if (!dateFilter.startDate && !dateFilter.endDate) return result;
+
+    return result.filter(trip => {
       const tripDate = new Date(trip.startDate);
       tripDate.setHours(0, 0, 0, 0);
 
@@ -124,12 +135,19 @@ const Dashboard: React.FC = () => {
       }
       return matches;
     });
-  }, [trips, dateFilter]);
+  }, [trips, dateFilter, selectedVehicleId]);
 
   const filteredExpenses = React.useMemo(() => {
-    if (!dateFilter.startDate && !dateFilter.endDate) return expenses;
+    let result = expenses;
 
-    return expenses.filter(exp => {
+    // Filter by vehicle
+    if (selectedVehicleId) {
+      result = result.filter(exp => exp.vehicleId === selectedVehicleId);
+    }
+
+    if (!dateFilter.startDate && !dateFilter.endDate) return result;
+
+    return result.filter(exp => {
       const expDate = new Date(exp.date);
       expDate.setHours(0, 0, 0, 0);
 
@@ -146,14 +164,13 @@ const Dashboard: React.FC = () => {
       }
       return matches;
     });
-  }, [expenses, dateFilter]);
+  }, [expenses, dateFilter, selectedVehicleId]);
 
   // --- Dynamic KPI Calculation ---
 
   // 1. Total Income (Converted to Display Currency)
   const totalIncome = filteredTrips.reduce((acc, trip) => {
     const paidAmount = trip.payments.reduce((sum, p) => sum + p.amount, 0);
-    // Payment amounts are in trip.currency
     return acc + convert(paidAmount, trip.currency);
   }, 0);
 
@@ -170,8 +187,18 @@ const Dashboard: React.FC = () => {
   }, 0);
 
   const netProfit = totalIncome - totalExpenses;
-  const activeVehicles = vehicles.filter(v => v.status === 'Active').length;
-  const overdueReminders = reminders.filter(r => r.status === 'Overdue');
+
+  // Filter vehicles and reminders based on selected vehicle
+  const filteredVehicles = selectedVehicleId
+    ? vehicles.filter(v => v.id === selectedVehicleId)
+    : vehicles;
+
+  const activeVehicles = filteredVehicles.filter(v => v.status === 'Active').length;
+
+  const overdueReminders = reminders.filter(r =>
+    r.status === 'Overdue' &&
+    (!selectedVehicleId || r.vehicleId === selectedVehicleId)
+  );
 
   // 4. Total Outstanding Loans (all loan types combined)
   const totalLoansOutstanding = React.useMemo(() => {
@@ -189,9 +216,7 @@ const Dashboard: React.FC = () => {
   const totalLoansCount = bankLoans.length + personalLoans.length + advancePayments.length + unpaidFuel.length;
 
   // --- Chart Data Mock (Scaling values to match currency) ---
-  // In a real app, you would aggregate historical data properly. 
-  // Here we just scale the mock chart data for visualization.
-  const rate = convert(1, 'USD'); // Get multiplier from USD to Display
+  const rate = convert(1, 'USD');
 
   const monthlyData = [
     { name: 'Aug', income: 4000 * rate, expense: 2400 * rate },
@@ -214,10 +239,14 @@ const Dashboard: React.FC = () => {
 
     return Object.entries(aggregation)
       .map(([name, value]) => ({ name, value }))
-      .sort((a, b) => b.value - a.value); // Sort by value descending
+      .sort((a, b) => b.value - a.value);
   }, [filteredExpenses, convert]);
 
   const COLORS = ['#1E3A8A', '#F97316', '#64748B', '#3b82f6'];
+
+  const handleVehicleFilterChange = (vehicleId: string | null) => {
+    setSelectedVehicleId(vehicleId);
+  };
 
   return (
     <div className="space-y-6">
@@ -227,7 +256,10 @@ const Dashboard: React.FC = () => {
           <h1 className="text-3xl font-bold text-primary">Dashboard Overview</h1>
           <p className="text-steel mt-1">Viewing financial data in <span className="font-bold text-primary">{displayCurrency}</span>.</p>
         </div>
-        <DateFilter onFilterChange={setDateFilter} />
+        <div className="flex flex-col sm:flex-row gap-3">
+          <VehicleFilter onFilterChange={handleVehicleFilterChange} />
+          <DateFilter onFilterChange={setDateFilter} />
+        </div>
       </div>
 
       {/* System Alert Widget */}
@@ -375,7 +407,6 @@ const Dashboard: React.FC = () => {
                     <p className="font-medium text-primary mt-0.5">{trip.customerName}</p>
                   </div>
                   <div className="text-right flex flex-col items-end gap-1">
-                    {/* Original Amount */}
                     <p className="font-bold text-primary">{format(convert(trip.totalPrice, trip.currency))}</p>
                     <p className="text-xs text-steel-light">Orig: {trip.currency} {formatCurrency(trip.totalPrice, trip.currency)}</p>
                     <Badge variant={
@@ -396,11 +427,14 @@ const Dashboard: React.FC = () => {
           </div>
           <div className="p-4">
             <div className="flex items-center justify-between mb-4">
-              <span className="text-sm text-steel">Active Vehicles</span>
-              <span className="text-sm font-bold text-primary">{activeVehicles} / {vehicles.length}</span>
+              <span className="text-sm text-steel">Active Vehicles {selectedVehicleId ? '(Selected)' : ''}</span>
+              <span className="text-sm font-bold text-primary">{activeVehicles} / {filteredVehicles.length}</span>
             </div>
             <div className="w-full bg-slate-100 rounded-full h-2 mb-6">
-              <div className="bg-primary h-2 rounded-full" style={{ width: '75%' }}></div>
+              <div
+                className="bg-primary h-2 rounded-full"
+                style={{ width: filteredVehicles.length > 0 ? `${(activeVehicles / filteredVehicles.length) * 100}%` : '0%' }}
+              ></div>
             </div>
 
             <h4 className="text-xs font-bold uppercase tracking-wider text-steel mb-3">Attention Needed</h4>
